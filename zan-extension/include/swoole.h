@@ -129,7 +129,7 @@ typedef unsigned long ulong_t;
 #define METHOD(class,name,...)      class##_##name(object, ##__VA_ARGS__)
 
 //-------------------------------------------------------------------------------
-#define SW_ASYNCERR			   1
+#define SW_ASYNCERR            1
 #define SW_OK                  0
 #define SW_ERR                -1
 #define SW_AGAIN              -2
@@ -137,6 +137,10 @@ typedef unsigned long ulong_t;
 #define SW_DONE               -4
 #define SW_DECLINED           -5
 #define SW_ABORT              -6
+
+//===============just for refactor...
+#define ZAN_OK                 0
+#define ZAN_ERR               -1
 
 //-------------------------------------------------------------------------------
 enum swReturnType
@@ -185,19 +189,19 @@ enum swServer_mode
 
 enum swCloseType
 {
-	SW_CLOSE_PASSIVE = 32, 			///被动关闭
-	SW_CLOSE_INITIATIVE,			///主动关闭
+    SW_CLOSE_PASSIVE = 32,          ///被动关闭
+    SW_CLOSE_INITIATIVE,            ///主动关闭
 };
 
 enum swClientTimeoutType
 {
-	SW_CLIENT_INVAILED_TIMEOUT = 0,
-	SW_CLIENT_CONNECT_TIMEOUT = 1,
-	SW_CLIENT_RECV_TIMEOUT = 2,
+    SW_CLIENT_INVAILED_TIMEOUT = 0,
+    SW_CLIENT_CONNECT_TIMEOUT = 1,
+    SW_CLIENT_RECV_TIMEOUT = 2,
 };
 
 
-#define SW_MODE_PACKET		   0x10
+#define SW_MODE_PACKET         0x10
 #define SW_SOCK_SSL            (1u << 9)
 #define SW_MAX_FDTYPE          32 //32 kinds of event
 
