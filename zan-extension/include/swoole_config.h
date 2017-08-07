@@ -45,6 +45,10 @@
 
 #define SW_GLOBAL_MEMORY_PAGESIZE  (1024*1024*2) //全局内存的分页
 
+//=========
+#define ZAN_GLOBAL_MEMORY_PAGESIZE  (1024*1024*2) //全局内存的分页
+
+
 #define SW_MAX_THREAD_NCPU         4 // n * cpu_num
 #define SW_MAX_WORKER_NCPU         1000 // n * cpu_num
 #define SW_MAX_REQUEST             5000          //最大请求包数
@@ -129,7 +133,7 @@
 #define SW_SESSION_LIST_SIZE             (1024*1024)
 
 
-#define SW_MSGMAX						 65535
+#define SW_MSGMAX                        65535
 /**
  * 最大Reactor线程数量，默认会启动CPU核数的线程数
  * 如果超过8核，默认启动8个线程
@@ -211,7 +215,7 @@
 
 #define SW_STRING_BUFFER_MAXLEN          (1024*1024*128)
 #define SW_STRING_BUFFER_DEFAULT         128
-#define SW_STRING_BUFFER_GARBAGE_MIN	 4
+#define SW_STRING_BUFFER_GARBAGE_MIN     4
 #define SW_STRING_BUFFER_GARBAGE_RATIO   (1024*64)
 
 #define SW_SIGNO_MAX                     128

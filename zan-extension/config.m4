@@ -305,6 +305,7 @@ if test "$PHP_ZAN" != "no"; then
         src/memory/Malloc.c \
         src/memory/Table.c \
         src/memory/Buffer.c \
+        src/memory/zanShmPool.c \
         src/factory/Factory.c \
         src/factory/FactoryThread.c \
         src/factory/FactoryProcess.c \
@@ -333,7 +334,6 @@ if test "$PHP_ZAN" != "no"; then
         src/lock/zanSpinLock.c \
         src/lock/zanFileLock.c \
         src/lock/zanAtomicLock.c \
-        src/lock/zanCond.c \
         src/lock/zanLockBase.c \
         src/network/Client.c \
         src/network/Connection.c \
@@ -366,6 +366,12 @@ if test "$PHP_ZAN" != "no"; then
         src/network/zanSocket.c \
         src/dns/DNS.c \
         src/signal/Signal.c \
+        src/ipc/zanCond.c \
+        src/ipc/zanPipe.c \
+        src/ipc/zanPipeBase.c \
+        src/ipc/zanUnSock.c \
+        src/ipc/zanMsgQueue.c \
+        src/ipc/zanShm.c \
         src/timer/Timer.c"
 
 

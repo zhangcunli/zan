@@ -16,7 +16,7 @@
   +----------------------------------------------------------------------+
 */
 
-#include "zanLock.h"
+#include "zanIpc.h"
 
 static int zanCond_notify(zanCond *cond);
 static int zanCond_broadcast(zanCond *cond);

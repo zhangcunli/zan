@@ -54,6 +54,7 @@ int zanLock_create(zanLock *lock, enum ZAN_LOCK_TYPE lock_type, int lock_arg)
     } else if (lock_type == ZAN_ATOMLOCK) {
         return zanAtomicLock_create(lock, lock_arg);
     } else {
+        zanFatalError("zanLock_create: lock_type=%d not support, exit.", lock_type);
         return ZAN_ERR;
     }
 }

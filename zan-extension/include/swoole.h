@@ -206,6 +206,7 @@ enum swClientTimeoutType
 #define SW_MAX_FDTYPE          32 //32 kinds of event
 
 #define swYield()              sched_yield() //or usleep(1)
+#define zanYield()             sched_yield() //or usleep(1)
 
 #ifndef uchar
 typedef unsigned char uchar;

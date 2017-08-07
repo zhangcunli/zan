@@ -131,22 +131,6 @@ typedef struct _zanLock
 int zanLock_create(zanLock *lock, enum ZAN_LOCK_TYPE lock_type, int lock_arg);
 
 
-//==========================zanCond=============================================
-typedef struct _zanCond
-{
-    zanLock lock;
-    pthread_cond_t cond;
-
-    int (*wait)(struct _zanCond *object);
-    int (*timewait)(struct _zanCond *object, long, long);
-    int (*notify)(struct _zanCond *object);
-    int (*broadcast)(struct _zanCond *object);
-    void (*free)(struct _zanCond *object);
-} zanCond;
-
-int zanCond_create(zanCond *cond);
-
-
 #ifdef __cplusplus
 }
 #endif

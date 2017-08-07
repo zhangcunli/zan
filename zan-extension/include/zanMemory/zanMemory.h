@@ -15,35 +15,33 @@
   |         Zan Group   <zan@zanphp.io>                                  |
   +----------------------------------------------------------------------+
 */
-#ifndef ZAN_ATOMIC_H_
-#define ZAN_ATOMIC_H_
 
-#include <stdint.h>
+#ifndef _ZAN_MEMORY_H_
+#define _ZAN_MEMORY_H_
 
-typedef long                    atomic_int_t;
-typedef unsigned long           atomic_uint_t;
-typedef volatile atomic_uint_t  zan_atomic_t;
+#include <stdlib.h>
 
-#define zan_atomic_fetch_add(value, add)   __sync_fetch_and_add(value, add)
-#define zan_atomic_fetch_sub(value, sub)   __sync_fetch_and_sub(value, sub)
-#define zan_atomic_add_fetch(value, add)   __sync_add_and_fetch(value, add)
-#define zan_atomic_sub_fetch(value, sub)   __sync_sub_and_fetch(value, sub)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define zan_atomic_memory_barrier()        __sync_synchronize()
-#define zan_atomic_set(ptr, value)         __sync_lock_test_and_set(ptr, value)
-#define zan_atomic_release(ptr)            __sync_lock_release(ptr)
+void* malloc_debug(const char* file,int line,const char* func,int __size);
+void free_debug(const char* file,int line,const char* func,void* ptr);
 
-#define zan_atomic_cmp_set(lock, old, set) __sync_bool_compare_and_swap(lock, old, set)
-
-#ifdef __arm__
-#define zan_atomic_cpu_pause()             __asm__ __volatile__ ("NOP");
-#elif defined(__x86_64__)
-#define zan_atomic_cpu_pause()             __asm__ __volatile__ ("pause")
+#ifdef ZAN_MALLOC_DEBUG
+#define zan_malloc(__size)      malloc_debug(__FILE__, __LINE__,__func__,__size)
+#define zan_free(ptr)           if(ptr){free_debug(__FILE__, __LINE__,__func__,ptr);ptr=NULL;}
 #else
-#define zan_atomic_cpu_pause()
+#define zan_malloc              malloc
+#define zan_free(ptr)           if(ptr){free(ptr);ptr=NULL;}
 #endif
 
-#define zan_spinlock_release(lock)         __sync_lock_release(lock)
+#define zan_calloc              calloc
+#define zan_realloc             realloc
 
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif //_ZAN_MEMORY_H_

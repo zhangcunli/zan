@@ -15,35 +15,44 @@
   |         Zan Group   <zan@zanphp.io>                                  |
   +----------------------------------------------------------------------+
 */
-#ifndef ZAN_ATOMIC_H_
-#define ZAN_ATOMIC_H_
 
-#include <stdint.h>
+#ifndef _ZAN_SHM_POOL_H_
+#define _ZAN_SHM_POOL_H_
 
-typedef long                    atomic_int_t;
-typedef unsigned long           atomic_uint_t;
-typedef volatile atomic_uint_t  zan_atomic_t;
+#include "zanLock.h"
 
-#define zan_atomic_fetch_add(value, add)   __sync_fetch_and_add(value, add)
-#define zan_atomic_fetch_sub(value, sub)   __sync_fetch_and_sub(value, sub)
-#define zan_atomic_add_fetch(value, add)   __sync_add_and_fetch(value, add)
-#define zan_atomic_sub_fetch(value, sub)   __sync_sub_and_fetch(value, sub)
-
-#define zan_atomic_memory_barrier()        __sync_synchronize()
-#define zan_atomic_set(ptr, value)         __sync_lock_test_and_set(ptr, value)
-#define zan_atomic_release(ptr)            __sync_lock_release(ptr)
-
-#define zan_atomic_cmp_set(lock, old, set) __sync_bool_compare_and_swap(lock, old, set)
-
-#ifdef __arm__
-#define zan_atomic_cpu_pause()             __asm__ __volatile__ ("NOP");
-#elif defined(__x86_64__)
-#define zan_atomic_cpu_pause()             __asm__ __volatile__ ("pause")
-#else
-#define zan_atomic_cpu_pause()
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define zan_spinlock_release(lock)         __sync_lock_release(lock)
+//-------------------share memory pool manager-------------------------
+typedef struct _zanShmPool
+{
+    void *object;
+    void* (*alloc)(struct _zanShmPool *pool, uint32_t size);
+    void (*destroy)(struct _zanShmPool *pool);
+}zanShmPool;
 
+/**
+ * Global share memory, the program life cycle only malloc / free one time
+ */
+typedef struct _zanShmGlobal
+{
+    int     size;      //总容量
+    void    *mem;      //剩余内存的指针
+    int     offset;    //内存分配游标
+    char    shared;
+    int     pagesize;
+    zanLock lock;
+    void *root_page;
+    void *cur_page;
+} zanShmGlobal;
 
+zanShmPool* zanShmGlobal_new(int pagesize, char shared);
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif  //_ZAN_SHM_POOL_H_
+

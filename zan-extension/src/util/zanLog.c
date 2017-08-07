@@ -74,17 +74,14 @@ void zanLog_put(int level, char *cnt)
     case ZAN_LOG_DEBUG:
         level_str = "DEBUG";
         break;
-    case ZAN_LOG_NOTICE:
-        level_str = "NOTICE";
-        break;
-    case ZAN_LOG_ERROR:
-        level_str = "ERROR";
+    case ZAN_LOG_TRACE:
+        level_str = "TRACE";
         break;
     case ZAN_LOG_WARNING:
         level_str = "WARNING";
         break;
-    case ZAN_LOG_TRACE:
-        level_str = "TRACE";
+    case ZAN_LOG_ERROR:
+        level_str = "ERROR";
         break;
     case ZAN_LOG_FATAL_ERROR:
         level_str = "FATAL";

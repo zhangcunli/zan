@@ -18,19 +18,18 @@
 #ifndef _ZAN_PROCESS_H_
 #define _ZAN_PROCESS_H_
 
-///TODO:::
-///这些要封装成什么形式？？？
-
-#ifdef XXXX
-//...
-#endif
-
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+///TODO:::
+///这些要封装成什么形式？？？
 
 typedef pid_t zan_pid_t;
 typedef uid_t zan_uid_t;
@@ -88,5 +87,9 @@ GetExitCodeProcess()        XXX
 GetEnvironmentVariable      getenv()
 SetEnvironmentVariable      setenv()
 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

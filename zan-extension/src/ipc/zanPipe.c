@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | Zan                                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2012-2016 Swoole Team <http://github.com/swoole>       |
+  | Copyright (c) 2016-2017 Zan Group <https://github.com/youzan/zan>    |
   +----------------------------------------------------------------------+
   | This source file is subject to version 2.0 of the Apache license,    |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -10,25 +10,25 @@
   | http://www.apache.org/licenses/LICENSE-2.0.html                      |
   | If you did not receive a copy of the Apache2.0 license and are unable|
   | to obtain it through the world-wide-web, please send a note to       |
-  | license@swoole.com so we can mail you a copy immediately.            |
+  | zan@zanphp.io so we can mail you a copy immediately.                 |
   +----------------------------------------------------------------------+
-  | Author: Tianfeng Han  <mikan.tenny@gmail.com>                        |
+  |         Zan Group   <zan@zanphp.io>                                  |
   +----------------------------------------------------------------------+
 */
-#if 0
-#include "swoole.h"
-#include "tests.h"
-#include "websocket.h"
 
-swUnitTest(ws_test1)
+#include "zanIpc.h"
+
+extern int zanPipeBase_create(zanPipe *pPipe, int isBlocking);
+extern int zanUnSock_create(zanPipe *pPipe, int isBlocking, int protocol);
+
+int zanPipe_create(zanPipe *pPipe, enum ZAN_PIPE_TYPE pipe_type, int isNonBlock, int protocpl)
 {
-	char buf[65536];
-	int fd = open("./websocket.log", O_RDONLY);
-	int len = swoole_sync_readfile(fd, buf, 65536) ;
-	if (len > 0)
-	{
-		swWebSocket_decode(buf);
-	}
-	return 0;
+    if (ZAN_PIPE == pipe_type) {
+        return zanPipeBase_create(pPipe, isNonBlock);
+    } else if (ZAN_UNSOCK == pipe_type) {
+        return zanUnSock_create(pPipe, isNonBlock, protocpl);
+    } else {
+        zanFatalError("zanPipe_create: pipe_type=%d not support, exit.", pipe_type);
+        return ZAN_ERR;
+    }
 }
-#endif

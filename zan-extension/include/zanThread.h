@@ -22,17 +22,19 @@
 #include <unistd.h>
 #include <pthread.h>
 
-///TODO:::要怎么封装
-///pthread 本身就是跨平台线程库
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-//TODO:::不同平台的这几个宏，在哪里定义输出?
-#if (LINUX)
+///TODO:::要怎么封装
+
+#if (__linux__)
     typedef pid_t          zan_tid_t;
     #define ZAN_TID_T_FMT  "%P"
-#elif (FREEBSD)
+#elif (__FreeBSD__)
     typedef uint32_t       zan_tid_t;
     #define ZAN_TID_T_FMT  "%uD"
-#elif (DARWIN)
+#elif (__MACH__)
     typedef uint64_t       zan_tid_t;
     #define ZAN_TID_T_FMT  "%uA"
 #else
@@ -41,5 +43,9 @@
 #endif
 
 zan_tid_t zan_get_thread_tid(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  //_ZAN_THREAD_H_

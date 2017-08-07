@@ -19,25 +19,22 @@
 #include "zanThread.h"
 
 
-#if (LINUX)
+#if (__linux__)
 
 zan_tid_t zan_get_thread_tid(void)
 {
     return syscall(SYS_gettid);
 }
 
-#elif (FREEBSD) && (__FreeBSD_version >= 900031)
+#elif (__FreeBSD__) && (__FreeBSD_version >= 900031)
 
 #include <pthread_np.h>
-
-
 zan_tid_t zan_get_thread_tid(void)
 {
     return pthread_getthreadid_np();
 }
 
-#elif (DARWIN)
-
+#elif (__MACH__)
 /*
  * MacOSX thread has two thread ids:
  *
@@ -58,7 +55,6 @@ zan_tid_t zan_get_thread_tid(void)
  *    It is a number in range 100-100,000.
  * return pthread_mach_thread_np(pthread_self());
  */
-
 #else
 
 zan_tid_t zan_get_thread_tid(void)
