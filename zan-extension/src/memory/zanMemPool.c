@@ -16,46 +16,51 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef _ZAN_SHM_POOL_H_
-#define _ZAN_SHM_POOL_H_
+#include "zanMemory/zanMemPool.h"
+#include "zanLog.h"
 
-#include "zanMemory/zanMemory.h"
-#include "zanLock.h"
+static void* swMalloc_alloc(swMemoryPool *pool, uint32_t size);
+static void swMalloc_free(swMemoryPool *pool, void *ptr);
+static void swMalloc_destroy(swMemoryPool *pool);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-//==========================================================================
-typedef struct _zanShmPool
+void* malloc_debug(const char* file,int line,const char* func,int __size)
 {
-    void *object;
-    void* (*alloc)(struct _zanShmPool *pool, uint32_t size);
-    void (*destroy)(struct _zanShmPool *pool);
-}zanShmPool;
-
-/**
- * Global share memory, the program life cycle only malloc / free one time
- */
-typedef struct _zanShmGlobal
-{
-    int     size;      //总容量
-    void    *mem;      //剩余内存的指针
-    int     offset;    //内存分配游标
-    char    shared;
-    int     pagesize;
-    zanLock lock;
-    void *root_page;
-    void *cur_page;
-} zanShmGlobal;
-
-//typedef zanMemPool zanShmPool;
-
-zanShmPool* zanShmGlobal_new(int pagesize, char shared);
-
-#ifdef __cplusplus
+    void *ptr = malloc(__size);
+    swDebug("malloc debug %s,%d,%s malloc %p",file,line,func,ptr);
+    return ptr;
 }
-#endif
 
-#endif  //_ZAN_SHM_POOL_H_
+void free_debug(const char* file,int line,const char* func,void* ptr)
+{
+    free(ptr);
+    swDebug("free debug %s,%d,%s free %p",file,line,func,ptr);
+}
 
+swMemoryPool* swMalloc_new()
+{
+    swMemoryPool *pool = sw_malloc(sizeof(swMemoryPool));
+    if (pool == NULL)
+    {
+        swSysError("mallc() failed.");
+        return NULL;
+    }
+    pool->alloc = swMalloc_alloc;
+    pool->free = swMalloc_free;
+    pool->destroy = swMalloc_destroy;
+    return pool;
+}
+
+static void* swMalloc_alloc(swMemoryPool *pool, uint32_t size)
+{
+    return sw_malloc(size);
+}
+
+static void swMalloc_free(swMemoryPool *pool, void *ptr)
+{
+    sw_free(ptr);
+}
+
+static void swMalloc_destroy(swMemoryPool *pool)
+{
+    sw_free(pool);
+}

@@ -29,7 +29,7 @@ int zanAtomicLock_create(zanLock *object, int spin);
 int zanAtomicLock_create(zanLock *lock, int spin)
 {
     if (!lock){
-        zanError("zanAtomicLock_create: lock is null.");
+        zanError("lock is null.");
         return ZAN_ERR;
     }
 
@@ -37,8 +37,8 @@ int zanAtomicLock_create(zanLock *lock, int spin)
 
     lock->lock_type = ZAN_ATOMLOCK;
     lock->object.atomlock.spin = spin;
-    lock->lock = zanAtomicLock_lock;
-    lock->unlock = zanAtomicLock_unlock;
+    lock->lock    = zanAtomicLock_lock;
+    lock->unlock  = zanAtomicLock_unlock;
     lock->trylock = zanAtomicLock_trylock;
     return ZAN_OK;
 }
@@ -46,7 +46,7 @@ int zanAtomicLock_create(zanLock *lock, int spin)
 static int zanAtomicLock_lock(zanLock *lock)
 {
     if (!lock){
-        zanError("zanAtomicLock_lock: lock is null.");
+        zanError("lock is null.");
         return ZAN_ERR;
     }
 
@@ -57,7 +57,7 @@ static int zanAtomicLock_lock(zanLock *lock)
 static int zanAtomicLock_unlock(zanLock *lock)
 {
     if (!lock){
-        zanError("zanAtomicLock_unlock: lock is null.");
+        zanError("lock is null.");
         return ZAN_ERR;
     }
 
@@ -68,7 +68,7 @@ static int zanAtomicLock_unlock(zanLock *lock)
 static int zanAtomicLock_trylock(zanLock *lock)
 {
     if (!lock){
-        zanError("zanAtomicLock_trylock: lock is null.");
+        zanError("lock is null.");
         return ZAN_ERR;
     }
 

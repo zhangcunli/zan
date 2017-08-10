@@ -29,14 +29,14 @@ int zanSpinLock_create(zanLock *object, int spin);
 int zanSpinLock_create(zanLock *lock, int use_in_process)
 {
     if (!lock){
-        zanError("zanSpinLock_create: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     bzero(lock, sizeof(zanLock));
     if (pthread_spin_init(&lock->object.spinlock.lock_t, use_in_process) < 0)
     {
-        zanSysError("zanSem_create: pthread_spin_init fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_spin_init fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -52,13 +52,13 @@ static int zanSpinLock_lock(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanSpinLock_lock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = pthread_spin_lock(&lock->object.spinlock.lock_t);
     if (0 != ret) {
-        zanError("zanSpinLock_lock: pthread_spin_lock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_spin_lock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -68,13 +68,13 @@ static int zanSpinLock_unlock(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanSpinLock_unlock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = zanSpinLock_unlock(&lock->object.spinlock.lock_t);
     if (0 != ret) {
-        zanError("zanSpinLock_unlock: zanSpinLock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("zanSpinLock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -84,13 +84,13 @@ static int zanSpinLock_trylock(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanSpinLock_trylock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = pthread_spin_trylock(&lock->object.spinlock.lock_t);
     if (0 != ret) {
-        zanError("zanSpinLock_trylock: pthread_spin_trylock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_spin_trylock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -100,13 +100,13 @@ static int zanSpinLock_free(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanSpinLock_free: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = pthread_spin_destroy(&lock->object.spinlock.lock_t);
     if (0 != ret) {
-        zanError("zanSpinLock_free: pthread_spin_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_spin_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

@@ -31,7 +31,7 @@ int zanRWLock_create(zanLock *lock, int use_in_process);
 int zanRWLock_create(zanLock *lock, int use_in_process)
 {
     if (!lock){
-        zanError("zanRWLock_create: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -39,13 +39,13 @@ int zanRWLock_create(zanLock *lock, int use_in_process)
 
     if (use_in_process && pthread_rwlockattr_setpshared(&lock->object.rwlock.attr, PTHREAD_PROCESS_SHARED) < 0)
     {
-        zanSysError("zanRWLock_create: pthread_rwlockattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_rwlockattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
     if (pthread_rwlock_init(&lock->object.rwlock._lock, &lock->object.rwlock.attr) < 0)
     {
-        zanSysError("zanRWLock_create: pthread_rwlockattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_rwlockattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -63,14 +63,14 @@ static int zanRWLock_lock_rd(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_lock_rd: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_rdlock(&lock->object.rwlock._lock);
     ret = pthread_rwlock_rdlock(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_lock_rd: pthread_rwlock_rdlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_rdlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -80,14 +80,14 @@ static int zanRWLock_lock_rw(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_lock_rw: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_wrlock(&lock->object.rwlock._lock);
     ret = pthread_rwlock_wrlock(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_lock_rw: pthread_rwlock_wrlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_wrlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -97,14 +97,14 @@ static int zanRWLock_unlock(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_unlock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_unlock(&lock->object.rwlock._lock);
     ret = pthread_rwlock_unlock(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_unlock: pthread_rwlock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -114,14 +114,14 @@ static int zanRWLock_trylock_rd(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_trylock_rd: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_tryrdlock(&lock->object.rwlock._lock);
     ret = pthread_rwlock_tryrdlock(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_trylock_rd: pthread_rwlock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -131,14 +131,14 @@ static int zanRWLock_trylock_rw(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_trylock_rw: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_trywrlock(&lock->object.rwlock._lock);
     ret = pthread_rwlock_trywrlock(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_trylock_rw: pthread_rwlock_trywrlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_trywrlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -148,14 +148,14 @@ static int zanRWLock_free(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanRWLock_free: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_rwlock_destroy(&lock->object.rwlock._lock);
     ret = pthread_rwlock_destroy(&lock->object.rwlock._lock);
     if (0 != ret) {
-        zanError("zanRWLock_free: pthread_rwlock_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_rwlock_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

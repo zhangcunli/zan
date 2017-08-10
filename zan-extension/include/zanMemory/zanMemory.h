@@ -39,7 +39,6 @@ void free_debug(const char* file,int line,const char* func,void* ptr);
 #define zan_calloc              calloc
 #define zan_realloc             realloc
 
-
 #ifdef __cplusplus
 }
 #endif

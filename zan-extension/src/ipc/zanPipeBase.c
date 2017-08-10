@@ -28,21 +28,21 @@ int zanPipeBase_create(zanPipe *pPipe, int isNonBlock);
 int zanPipeBase_create(zanPipe *pPipe, int isNonBlock)
 {
     if (!pPipe){
-        zanError("zanPipeBase_create, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
     zanPipeFd *object = (zanPipeFd *)zan_malloc(sizeof(zanPipeFd));
     if (!object)
     {
-        zanSysError("zanPipeBase_create, malloc fail, errno=%d:%s", errno, strerror(errno));
+        zanSysError("malloc fail, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
     if (pipe(object->fds) < 0)
     {
         zan_free(object);
-        zanSysError("zanPipeBase_create, pipe create fail, errno=%d:%s", errno, strerror(errno));
+        zanSysError("pipe create fail, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -66,7 +66,7 @@ int zanPipeBase_create(zanPipe *pPipe, int isNonBlock)
 static int zanPipeBase_read(zanPipe *pPipe, void *buffer, int length)
 {
     if (!pPipe) {
-        zanError("zanPipeBase_read, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -77,7 +77,7 @@ static int zanPipeBase_read(zanPipe *pPipe, void *buffer, int length)
 static int zanPipeBase_write(zanPipe *pPipe, void *buffer, int length)
 {
     if (!pPipe) {
-        zanError("swPipeBase_write, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -88,7 +88,7 @@ static int zanPipeBase_write(zanPipe *pPipe, void *buffer, int length)
 static int zanPipeBase_getFd(zanPipe *pPipe, int isWriteFd)
 {
     if (!pPipe) {
-        zanError("swPipeBase_getFd, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -99,7 +99,7 @@ static int zanPipeBase_getFd(zanPipe *pPipe, int isWriteFd)
 int zanPipeBase_close(zanPipe *pPipe)
 {
     if (!pPipe) {
-        zanError("zanPipeBase_close, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 

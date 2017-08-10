@@ -18,8 +18,8 @@
 */
 
 
-#ifndef ZAN_LOCK_H_
-#define ZAN_LOCK_H_
+#ifndef _ZAN_ZANLOCK_H_
+#define _ZAN_ZANLOCK_H_
 
 #include "swoole.h"
 #include "zanAtomic.h"
@@ -135,4 +135,4 @@ int zanLock_create(zanLock *lock, enum ZAN_LOCK_TYPE lock_type, int lock_arg);
 }
 #endif
 
-#endif
+#endif  //_ZAN_LOCK_H_

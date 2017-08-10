@@ -30,19 +30,19 @@ int zanCond_create(zanCond *cond)
 {
     if (!cond)
     {
-        zanError("zanCond_create: cond is null");
+        zanError("cond is null");
         return ZAN_ERR;
     }
 
-    if (pthread_cond_init(&cond->cond, NULL) < 0)
+    if (0 != pthread_cond_init(&cond->cond, NULL))
     {
-        zanSysError("zanCond_create: pthread_cond_init fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_cond_init fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
-    if (zanMutex_create(&cond->lock, 0) < 0)
+    if (ZAN_OK != zanMutex_create(&cond->lock, 0))
     {
-        zanError("zanMutex_create error.");
+        zanError("zanMutex_create return error.");
         return ZAN_ERR;
     }
 
@@ -60,14 +60,14 @@ static int zanCond_notify(zanCond *cond)
     int err = 0;
     if (!cond)
     {
-        zanError("zanCond_notify: cond is null");
+        zanError("cond is null");
         return ZAN_ERR;
     }
 
     err = pthread_cond_signal(&cond->cond);
     if (0 != err)
     {
-        zanError("zanCond_notify: pthread_cond_signal return err=%d, errno=%d:%s", err, errno, strerror(errno));
+        zanError("pthread_cond_signal return err=%d, errno=%d:%s", err, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -78,14 +78,14 @@ static int zanCond_broadcast(zanCond *cond)
     int err = 0;
     if (!cond)
     {
-        zanError("zanCond_broadcast: cond is null");
+        zanError("cond is null");
         return ZAN_ERR;
     }
 
     err = pthread_cond_broadcast(&cond->cond);
     if (0 != err)
     {
-        zanError("zanCond_broadcast: pthread_cond_broadcast return err=%d, errno=%d:%s", err, errno, strerror(errno));
+        zanError("pthread_cond_broadcast return err=%d, errno=%d:%s", err, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -96,7 +96,7 @@ static int zanCond_timewait(zanCond *cond, long sec, long nsec)
     int err = 0;
     if (!cond)
     {
-        zanError("zanCond_timewait: cond is null");
+        zanError("cond is null");
         return ZAN_ERR;
     }
 
@@ -108,7 +108,7 @@ static int zanCond_timewait(zanCond *cond, long sec, long nsec)
     err = pthread_cond_timedwait(&cond->cond, &cond->lock.object.mutex._lock, &timeo);
     if (0 != err)
     {
-        zanError("zanCond_timewait: pthread_cond_timedwait return err=%d, errno=%d:%s", err, errno, strerror(errno));
+        zanError("pthread_cond_timedwait return err=%d, errno=%d:%s", err, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -119,14 +119,14 @@ static int zanCond_wait(zanCond *cond)
     int err = 0;
     if (!cond)
     {
-        zanError("zanCond_wait: cond is null");
+        zanError("cond is null");
         return ZAN_ERR;
     }
 
     err = pthread_cond_wait(&cond->cond, &cond->lock.object.mutex._lock);
     if (0 != err)
     {
-        zanError("zanCond_wait: pthread_cond_wait return err=%d, errno=%d:%s", err, errno, strerror(errno));
+        zanError("pthread_cond_wait return err=%d, errno=%d:%s", err, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -137,15 +137,14 @@ static void zanCond_free(zanCond *cond)
     int err = 0;
     if (!cond)
     {
-        zanError("zanCond_free: cond is null");
+        zanError("cond is null");
         return;
     }
 
     err = pthread_cond_destroy(&cond->cond);
     if (err != 0)
     {
-        zanError("zanCond_free: pthread_cond_destroy fail，err=%d, errno=%d:%s", err, errno, strerror(errno));
+        zanError("pthread_cond_destroy fail，err=%d, errno=%d:%s", err, errno, strerror(errno));
     }
-
     cond->lock.free(&cond->lock);
 }

@@ -311,6 +311,7 @@ if test "$PHP_ZAN" != "no"; then
         src/factory/FactoryProcess.c \
         src/factory/ProcessPool.c \
         src/factory/ThreadPool.c \
+        src/factory/zanFactory.c \
         src/reactor/ReactorBase.c \
         src/reactor/ReactorSelect.c \
         src/reactor/ReactorPoll.c \
@@ -346,7 +347,6 @@ if test "$PHP_ZAN" != "no"; then
         src/network/Socket.c \
         src/network/TaskWorker.c \
         src/network/Worker.c \
-        src/aio/AsyncIO.c \
         src/protocol/Base.c \
         src/protocol/Base64.c \
         src/protocol/Http.c \
@@ -372,6 +372,8 @@ if test "$PHP_ZAN" != "no"; then
         src/ipc/zanUnSock.c \
         src/ipc/zanMsgQueue.c \
         src/ipc/zanShm.c \
+        src/aio/AsyncIO.c \
+        src/aio/zanAio.c \
         src/timer/Timer.c"
 
 

@@ -37,7 +37,7 @@ int zanLock_create(zanLock *lock, enum ZAN_LOCK_TYPE lock_type, int lock_arg)
 #ifdef HAVE_RWLOCK
         return zanRWLock_create(lock, lock_arg);
 #endif
-        zanFatalError("zanLock_create: ZAN_RWLOCK lock_type not support, exit.");
+        zanFatalError("ZAN_RWLOCK lock_type not support, exit.");
         return ZAN_ERR;
     } else if (lock_type == ZAN_FILELOCK) {
         return zanFileLock_create(lock, lock_arg);
@@ -49,12 +49,12 @@ int zanLock_create(zanLock *lock, enum ZAN_LOCK_TYPE lock_type, int lock_arg)
 #ifdef HAVE_SPINLOCK
         return zanSpinLock_create(lock, lock_arg);
 #endif
-        zanFatalError("zanLock_create: ZAN_SPINLOCK lock_type not support, exit.");
+        zanFatalError("ZAN_SPINLOCK lock_type not support, exit.");
         return ZAN_ERR;
     } else if (lock_type == ZAN_ATOMLOCK) {
         return zanAtomicLock_create(lock, lock_arg);
     } else {
-        zanFatalError("zanLock_create: lock_type=%d not support, exit.", lock_type);
+        zanFatalError("lock_type=%d not support, exit.", lock_type);
         return ZAN_ERR;
     }
 }

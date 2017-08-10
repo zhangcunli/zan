@@ -31,7 +31,7 @@ int zanFileLock_create(zanLock *lock, int fd);
 int zanFileLock_create(zanLock *lock, int fd)
 {
     if (!lock){
-        zanError("zanFileLock_create: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -52,7 +52,7 @@ static int zanFileLock_lock_rd(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_lock_rd: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -60,7 +60,7 @@ static int zanFileLock_lock_rd(zanLock *lock)
 
     ret = fcntl(lock->object.filelock.fd, F_SETLKW, &lock->object.filelock);
     if (-1 == ret) {
-        zanError("zanFileLock_lock_rd, fcntl return error, errno=%d:%s", errno, strerror(errno));
+        zanError("fcntl return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;
@@ -70,14 +70,14 @@ static int zanFileLock_lock_rw(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_lock_rw: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     lock->object.filelock.lock_t.l_type = F_WRLCK;
     ret = fcntl(lock->object.filelock.fd, F_SETLKW, &lock->object.filelock);
     if (-1 == ret) {
-        zanError("zanFileLock_lock_rw, fcntl return error, errno=%d:%s", errno, strerror(errno));
+        zanError("fcntl return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;
@@ -87,14 +87,14 @@ static int zanFileLock_unlock(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_unlock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     lock->object.filelock.lock_t.l_type = F_UNLCK;
     ret = fcntl(lock->object.filelock.fd, F_SETLKW, &lock->object.filelock);
     if (-1 == ret) {
-        zanError("zanFileLock_unlock, fcntl return error, errno=%d:%s", errno, strerror(errno));
+        zanError("fcntl return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;
@@ -104,14 +104,14 @@ static int zanFileLock_trylock_rw(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_trylock_rw: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     lock->object.filelock.lock_t.l_type = F_WRLCK;
     ret = fcntl(lock->object.filelock.fd, F_SETLK, &lock->object.filelock);
     if (-1 == ret) {
-        zanError("zanFileLock_trylock_rw, fcntl return error, errno=%d:%s", errno, strerror(errno));
+        zanError("fcntl return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;
@@ -121,14 +121,14 @@ static int zanFileLock_trylock_rd(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_trylock_rd: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     lock->object.filelock.lock_t.l_type = F_RDLCK;
     ret = fcntl(lock->object.filelock.fd, F_SETLK, &lock->object.filelock);
     if (-1 == ret) {
-        zanError("zanFileLock_trylock_rd, fcntl return error, errno=%d:%s", errno, strerror(errno));
+        zanError("fcntl return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;
@@ -138,13 +138,13 @@ static int zanFileLock_free(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanFileLock_free: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = close(lock->object.filelock.fd);
     if (-1 == ret) {
-        zanError("zanFileLock_free, close return error, errno=%d:%s", errno, strerror(errno));
+        zanError("close return error, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

@@ -28,7 +28,7 @@ int zanPipe_create(zanPipe *pPipe, enum ZAN_PIPE_TYPE pipe_type, int isNonBlock,
     } else if (ZAN_UNSOCK == pipe_type) {
         return zanUnSock_create(pPipe, isNonBlock, protocpl);
     } else {
-        zanFatalError("zanPipe_create: pipe_type=%d not support, exit.", pipe_type);
+        zanFatalError("pipe_type=%d not support, exit.", pipe_type);
         return ZAN_ERR;
     }
 }

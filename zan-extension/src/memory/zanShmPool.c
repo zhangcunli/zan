@@ -37,13 +37,13 @@ zanShmPool* zanShmGlobal_new(int pagesize, char shared)
     void *first_page = zanShmGlobal_new_page(&gShm);
     if (first_page == NULL)
     {
-        zanError("zanShmGlobal_new, zanShmGlobal_new_page failed");
+        zanError("zanShmGlobal_new_page failed");
         return NULL;
     }
     //分配内存需要加锁
     if (zanLock_create(&gShm.lock, ZAN_MUTEX, 1) < 0)
     {
-        zanError("zanShmGlobal_new, zanLock_create failed");
+        zanError("zanLock_create failed");
         return NULL;
     }
     //root
@@ -71,7 +71,7 @@ static void* zanShmGlobal_new_page(zanShmGlobal *gShm)
     void *page = (gShm->shared == 1) ? zan_shm_malloc(gShm->pagesize) : zan_malloc(gShm->pagesize);
     if (page == NULL)
     {
-        zanError("zanShmGlobal_new_page, malloc failed, gShm->shared=%d", gShm->shared);
+        zanError("malloc failed, gShm->shared=%d", gShm->shared);
         return NULL;
     }
 
@@ -90,18 +90,18 @@ static void *zanShmGlobal_alloc(zanShmPool *pool, uint32_t size)
     gm->lock.lock(&gm->lock);
     if (size > gm->pagesize)
     {
-        zanWarn("zanShmGlobal_alloc: alloc %d bytes not allow. Max size=%d", size, gm->pagesize);
+        zanWarn("alloc %d bytes not allow. Max size=%d", size, gm->pagesize);
         return NULL;
     }
 
     if (gm->offset + size > gm->size)
     {
         //没有足够的内存,再次申请
-        zanDebug("zanShmGlobal_alloc new page: size=%d|offset=%d|alloc=%d", gm->size, gm->offset, size);
+        zanDebug("new page: size=%d|offset=%d|alloc=%d", gm->size, gm->offset, size);
         void *page = zanShmGlobal_new_page(gm);
         if (page == NULL)
         {
-            zanError("zanShmGlobal_alloc, zanShmGlobal_new_page error.");
+            zanError("zanShmGlobal_new_page error.");
             return NULL;
         }
         //将next指向新申请的内存块
@@ -124,7 +124,7 @@ static void zanShmGlobal_destroy(zanShmPool *pool)
     {
         next = ((void **)next)[0];
         zan_shm_free(page);
-        zanTrace("zanShmGlobal_destroy, zan_shm_free free=%p", next);
+        zanTrace("zan_shm_free free=%p", next);
     }
 }
 

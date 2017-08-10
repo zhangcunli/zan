@@ -16,46 +16,36 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef _ZAN_SHM_POOL_H_
-#define _ZAN_SHM_POOL_H_
+#ifndef _ZAN_ZANASYNCIO_H_
+#define _ZAN_ZANASYNCIO_H_
 
-#include "zanMemory/zanMemory.h"
-#include "zanLock.h"
+#include "zanIpc.h"
+#include "zanLog.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//==========================================================================
-typedef struct _zanShmPool
+//=========================================
+typedef struct _zanAsyncIO
 {
-    void *object;
-    void* (*alloc)(struct _zanShmPool *pool, uint32_t size);
-    void (*destroy)(struct _zanShmPool *pool);
-}zanShmPool;
+    uint8_t  init;
+    uint8_t  thread_num;
+    uint32_t task_num;
+    uint32_t buf_max_len;
+    uint16_t current_id;
+    zanLock  mutexLock;
 
-/**
- * Global share memory, the program life cycle only malloc / free one time
- */
-typedef struct _zanShmGlobal
-{
-    int     size;      //总容量
-    void    *mem;      //剩余内存的指针
-    int     offset;    //内存分配游标
-    char    shared;
-    int     pagesize;
-    zanLock lock;
-    void *root_page;
-    void *cur_page;
-} zanShmGlobal;
+    int (*read)(int fd, void *outbuf, size_t size, off_t offset);
+    int (*write)(int fd, void *inbuf, size_t size, off_t offset);
+    void (*callback)(swAio_event *aio_event);
+    void (*destroy)(void);
+} zanAsyncIO;
 
-//typedef zanMemPool zanShmPool;
+void zanAio_callback_test(swAio_event *aio_event);
+int  zanAio_init(void);
+void zanAio_free(void);
 
-zanShmPool* zanShmGlobal_new(int pagesize, char shared);
+int  zanAio_dns_lookup(int type,void *hostname, void *ip_addr, size_t size);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif  //_ZAN_SHM_POOL_H_
-
+#endif  //_ZAN_ZANASYNCIO_H_

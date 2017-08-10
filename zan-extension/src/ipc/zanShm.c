@@ -26,7 +26,7 @@ void* zan_shm_malloc(size_t size)
     void *mem = zanShm_mmap_create(&object, size, NULL);
     if (mem == NULL)
     {
-        zanError("zan_shm_malloc, zanShm_mmap_create failed.");
+        zanError("zanShm_mmap_create failed.");
         return NULL;
     }
     memcpy(mem, &object, sizeof(zanShareMemory)); //zanShareMemory 对象保存在整个内存块的头部
@@ -42,7 +42,7 @@ void* zan_shm_calloc(size_t num, size_t _size)
     void *mem = zanShm_mmap_create(&object, size, NULL);
     if (mem == NULL)
     {
-        zanError("zan_shm_calloc, zanShm_mmap_create failed.");
+        zanError("zanShm_mmap_create failed.");
         return NULL;
     }
 
@@ -67,14 +67,14 @@ void* zan_shm_realloc(void *ptr, size_t new_size)
     zanShareMemory *object = (zanShareMemory *)(ptr - sizeof(zanShareMemory));
     if (object->size >= new_size)
     {
-        zanError("zan_shm_realloc, error: new_size=%d is less than oldsize=%d", (int)new_size, object->size);
+        zanError("error: new_size=%d is less than oldsize=%d", (int)new_size, object->size);
         return ptr;
     }
 
     void *new_ptr = zan_shm_malloc(new_size);
     if(!new_ptr)
     {
-        zanError("zan_shm_realloc, zan_shm_malloc failed, new_size=%d", (int)new_size);
+        zanError("zan_shm_malloc failed, new_size=%d", (int)new_size);
         return ptr;
     }
     memcpy(new_ptr, ptr, object->size);
@@ -87,7 +87,7 @@ void *zanShm_mmap_create(zanShareMemory *object, int size, char *mapfile)
 {
     if (!object || size <= 0)
     {
-        zanError("zanShm_mmap_create, object is null or size=%d is invalid", size);
+        zanError("object is null or size=%d is invalid", size);
         return NULL;
     }
 
@@ -104,7 +104,7 @@ void *zanShm_mmap_create(zanShareMemory *object, int size, char *mapfile)
     tmpfd = open(mapfile, O_RDWR);
     if(-1 == tmpfd)
     {
-        zanSysError("zanShm_mmap_create, open failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("open failed, errno=%d:%s", errno, strerror(errno));
         return NULL;
     }
     object->tmpfd = tmpfd;
@@ -116,7 +116,7 @@ void *zanShm_mmap_create(zanShareMemory *object, int size, char *mapfile)
     if (!mem)
 #endif
     {
-        zanSysError("zanShm_mmap_create, mmap failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("mmap failed, errno=%d:%s", errno, strerror(errno));
         return NULL;
     }
 
@@ -130,14 +130,14 @@ int zanShm_mmap_free(zanShareMemory *object)
     int ret = 0;
     if (!object)
     {
-        zanError("zanShm_mmap_free, object is null");
+        zanError("object is null");
         return ZAN_ERR;
     }
 
     ret = munmap(object->mem, object->size);
     if (-1 == ret)
     {
-        zanSysError("zanShm_mmap_free, munmap failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("munmap failed, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

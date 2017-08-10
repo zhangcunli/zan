@@ -29,7 +29,7 @@ int zan_nonblocking(int fd, int isNonblock)
 
     if (-1 == opts)
     {
-        zanSysError("zan_nonblocking, fcntl(%d, GETFL) failed.", fd);
+        zanSysError("fcntl(%d, GETFL) failed.", fd);
         opts = (isNonblock)? 0:1;
     }
     opts = (isNonblock)? (opts | O_NONBLOCK):(opts & ~O_NONBLOCK);
@@ -41,7 +41,7 @@ int zan_nonblocking(int fd, int isNonblock)
 
     if (-1 == ret)
     {
-        zanSysError("zan_nonblocking, fcntl(%d, SETFL, opts) failed, errno=%d:%s.", fd, errno, strerror(errno));
+        zanSysError("fcntl(%d, SETFL, opts) failed, errno=%d:%s.", fd, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -51,12 +51,12 @@ int zanSocket_set_buffer_size(int fd, int buffer_size)
 {
     if (-1 == setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buffer_size, sizeof(buffer_size)))
     {
-        zanSysError("zanSocket_set_buffer_size, setsockopt(fd=%d,size=%d) failed, errno=%d:%s", fd, buffer_size, errno, strerror(errno));
+        zanSysError("setsockopt(fd=%d,size=%d) failed, errno=%d:%s", fd, buffer_size, errno, strerror(errno));
         return ZAN_ERR;
     }
     if (-1 == setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size)))
     {
-        zanSysError("zanSocket_set_buffer_size, setsockopt(fd=%d,size=%d) failed, errno=%d:%s", fd, buffer_size, errno, strerror(errno));
+        zanSysError("setsockopt(fd=%d,size=%d) failed, errno=%d:%s", fd, buffer_size, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

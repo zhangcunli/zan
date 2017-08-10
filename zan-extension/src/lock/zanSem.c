@@ -28,26 +28,26 @@ int zanSem_create(zanLock *lock, key_t key);
 int zanSem_create(zanLock *lock, key_t key)
 {
     if (!lock){
-        zanError("zanSem_create: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //assert(key != 0);
     if (key == 0){
-        zanError("zanSem_create: key==0.");
+        zanError("key==0.");
         return ZAN_ERR;
     }
 
     int semid = semget(key, 1, IPC_CREAT | 0666);
     if (semid < 0)
     {
-        zanSysError("zanSem_create: semget fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("semget fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
     if (semctl(semid, 0, SETVAL, 1) < 0)
     {
-        zanSysError("zanSem_create: semget(SETVAL) fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("semget(SETVAL) fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -67,7 +67,7 @@ static int zanSem_unlock(zanLock *lock)
     struct sembuf sem;
 
     if (!lock){
-        zanError("zanSem_unlock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -77,7 +77,7 @@ static int zanSem_unlock(zanLock *lock)
 
     ret = semop(lock->object.sem.semid, &sem, 1);
     if (0 != ret) {
-        zanError("zanSem_unlock: semop(SEM_UNDO,op=1) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("semop(SEM_UNDO,op=1) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -88,7 +88,7 @@ static int zanSem_lock(zanLock *lock)
     int ret = 0;
     struct sembuf sem;
     if (!lock){
-        zanError("zanSem_lock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -98,7 +98,7 @@ static int zanSem_lock(zanLock *lock)
 
     ret = semop(lock->object.sem.semid, &sem, 1);
     if (0 != ret) {
-        zanError("zanSem_unlock: semop(SEM_UNDO,op=-1) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("semop(SEM_UNDO,op=-1) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -108,13 +108,13 @@ static int zanSem_free(zanLock *lock)
 {
     int ret = 0;
     if (!lock){
-        zanError("zanSem_free: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = semctl(lock->object.sem.semid, 0, IPC_RMID);
     if (-1 == ret) {
-        zanError("zanSem_free: semctl(IPC_RMID) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("semctl(IPC_RMID) return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ret;

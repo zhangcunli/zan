@@ -26,14 +26,14 @@ int zanMsgQueue_close(zanMsgQueue *pMq);
 int zanMsgQueue_create(zanMsgQueue *pMq, int blocking, key_t msg_key, long type)
 {
     if (!pMq){
-        zanError("zanMsgQueue_create, pMq is null, error.");
+        zanError("pMq is null, error.");
         return ZAN_ERR;
     }
 
     int msg_id = msgget(msg_key, IPC_CREAT | O_EXCL | 0666);
     if (-1 == msg_id)
     {
-        zanSysError("zanMsgQueue_create, msgget() failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("msgget() failed, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -55,7 +55,7 @@ int zanMsgQueue_pop(zanMsgQueue *pMq, zanQueue_Data *out, int length)
     long type = out->mtype;
 
     if (!pMq){
-        zanError("zanMsgQueue_close, pMq is null, error.");
+        zanError("pMq is null, error.");
         return ZAN_ERR;
     }
 
@@ -90,7 +90,7 @@ int zanMsgQueue_stat(zanMsgQueue *pMq, int *queue_num, int *queue_bytes)
     struct msqid_ds stat;
     if (msgctl(pMq->msg_id, IPC_STAT, &stat) == -1)
     {
-        zanSysError("zanMsgQueue_stat, msgctl(IPC_STAT) failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("msgctl(IPC_STAT) failed, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     } else {
         *queue_num   = stat.msg_qnum;
@@ -103,14 +103,14 @@ int zanMsgQueue_close(zanMsgQueue *pMq)
 {
     int ret = 0;
     if (!pMq){
-        zanError("zanMsgQueue_close, pMq is null, error.");
+        zanError("pMq is null, error.");
         return ZAN_ERR;
     }
 
     ret = msgctl(pMq->msg_id, IPC_RMID, 0);
     if (-1 == ret)
     {
-        zanError("zanMsgQueue_close, msgctl failed, errno=%d:%s", errno, strerror(errno));
+        zanError("msgctl failed, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;

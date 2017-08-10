@@ -30,20 +30,20 @@ int zanUnSock_create(zanPipe *pPipe, int isNonBlock, int protocol);
 int zanUnSock_create(zanPipe *pPipe, int isNonBlock, int protocol)
 {
     if (!pPipe){
-        zanError("zanUnSock_create, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
     zanPipeFd *object = (zanPipeFd *)zan_malloc(sizeof(zanPipeFd));
     if (!object)
     {
-        zanFatalError("zanUnSock_create, malloc failed, errno=%d:%s", errno, strerror(errno));
+        zanFatalError("malloc failed, errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
     if (socketpair(AF_UNIX, protocol, 0, object->fds) < 0)
     {
-        zanSysError("zanUnSock_create, socketpair failed, errno=%d:%s", errno, strerror(errno));
+        zanSysError("socketpair failed, errno=%d:%s", errno, strerror(errno));
         zan_free(object);
         return ZAN_ERR;
     }
@@ -74,7 +74,7 @@ int zanUnSock_create(zanPipe *pPipe, int isNonBlock, int protocol)
 static int zanUnSock_read(zanPipe *pPipe, void *buffer, int length)
 {
     if (!pPipe) {
-        zanError("swPipeUnsock_read, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -85,7 +85,7 @@ static int zanUnSock_read(zanPipe *pPipe, void *buffer, int length)
 static int zanUnSock_write(zanPipe *pPipe, void *buffer, int length)
 {
     if (!pPipe) {
-        zanError("zanUnSock_write, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -96,7 +96,7 @@ static int zanUnSock_write(zanPipe *pPipe, void *buffer, int length)
 static int zanUnSock_getFd(zanPipe *pPipe, int isWriteFd)
 {
     if (!pPipe) {
-        zanError("zanUnSock_getFd, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 
@@ -107,7 +107,7 @@ static int zanUnSock_getFd(zanPipe *pPipe, int isWriteFd)
 int zanUnSock_close(zanPipe *pPipe)
 {
     if (!pPipe) {
-        zanError("zanPipeBase_close, pPipe is null, error.");
+        zanError("pPipe is null, error.");
         return ZAN_ERR;
     }
 

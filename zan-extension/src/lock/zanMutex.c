@@ -30,7 +30,7 @@ int zanMutex_create(zanLock *lock, int use_in_process)
 {
     if (!lock)
     {
-        zanError("zanMutex_create: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -39,14 +39,14 @@ int zanMutex_create(zanLock *lock, int use_in_process)
     pthread_mutexattr_init(&lock->object.mutex.attr);
     if (use_in_process && pthread_mutexattr_setpshared(&lock->object.mutex.attr, PTHREAD_PROCESS_SHARED) < 0)
     {
-        zanSysError("zanMutex_create,pthread_mutexattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_mutexattr_setpshared fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
 
     if (pthread_mutex_init(&lock->object.mutex._lock, &lock->object.mutex.attr) < 0)
     {
-        zanSysError("zanMutex_create,pthread_mutex_init fail，errno=%d:%s", errno, strerror(errno));
+        zanSysError("pthread_mutex_init fail，errno=%d:%s", errno, strerror(errno));
         return ZAN_ERR;
     }
 
@@ -63,13 +63,13 @@ static int zanMutex_lock(zanLock *lock)
     int ret = 0;
     if (!lock)
     {
-        zanError("zanMutex_lock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = pthread_mutex_lock(&lock->object.mutex._lock);
     if (0 != ret) {
-        zanError("zanMutex_lock: pthread_mutex_lock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_mutex_lock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -80,13 +80,13 @@ static int zanMutex_unlock(zanLock *lock)
     int ret = 0;
     if (!lock)
     {
-        zanError("zanMutex_unlock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     ret = pthread_mutex_unlock(&lock->object.mutex._lock);
     if (0 != ret) {
-        zanError("zanMutex_unlock: pthread_mutex_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_mutex_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -97,19 +97,16 @@ static int zanMutex_trylock(zanLock *lock)
     int ret = 0;
     if (!lock)
     {
-        zanError("zanMutex_trylock: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
-    ret = pthread_mutex_unlock(&lock->object.mutex._lock);
+    ret = pthread_mutex_trylock(&lock->object.mutex._lock);
     if (0 != ret) {
-        zanError("zanMutex_unlock: pthread_mutex_unlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_mutex_trylock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
-
-    //TODO::如果失败是应该返回错误码而不是 ZAN_ERR???
-    //return pthread_mutex_trylock(&lock->object.mutex._lock);
 }
 
 #ifdef HAVE_MUTEX_TIMEDLOCK
@@ -120,7 +117,7 @@ int zanMutex_lockwait(zanLock *lock, int timeout_msec)
 
     if (!lock)
     {
-        zanError("zanMutex_lockwait: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -130,7 +127,7 @@ int zanMutex_lockwait(zanLock *lock, int timeout_msec)
     //return pthread_mutex_timedlock(&lock->object.mutex._lock, &timeo);
     ret = pthread_mutex_timedlock(&lock->object.mutex._lock, &timeo);
     if (0 != ret) {
-        zanError("zanMutex_lockwait: pthread_mutex_timedlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_mutex_timedlock return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
@@ -143,7 +140,7 @@ int zanMutex_lockwait(zanLock *lock, int timeout_msec)
 
     if (!lock)
     {
-        zanError("zanMutex_lockwait: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
@@ -174,14 +171,14 @@ static int zanMutex_free(zanLock *lock)
     int ret = 0;
     if (!lock)
     {
-        zanError("zanMutex_free: lock is null");
+        zanError("lock is null");
         return ZAN_ERR;
     }
 
     //return pthread_mutex_destroy(&lock->object.mutex._lock);
     ret = pthread_mutex_destroy(&lock->object.mutex._lock);
     if (0 != ret) {
-        zanError("zanMutex_free: pthread_mutex_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
+        zanError("pthread_mutex_destroy return ret=%d, errno=%d:%s", ret, errno, strerror(errno));
         return ZAN_ERR;
     }
     return ZAN_OK;
