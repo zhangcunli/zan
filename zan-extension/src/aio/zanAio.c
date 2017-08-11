@@ -120,14 +120,10 @@ static int zanAioBase_init(int max_aio_events)
         return ZAN_ERR;
     }
 
+    pipe_read_fd = zan_aio_pipe.getFd(&zan_aio_pipe, 0);
     SwooleG.main_reactor->add(SwooleG.main_reactor, pipe_read_fd, SW_FD_AIO);
     SwooleG.main_reactor->setHandle(SwooleG.main_reactor, SW_FD_AIO, zanAioBase_onFinish);
     SwooleG.main_reactor->setHandle(SwooleG.main_reactor,SW_FD_AIO | SW_EVENT_ERROR, zanAioBase_onError);
-
-    pipe_read_fd = zan_aio_pipe.getFd(&zan_aio_pipe, 0);
-    swConnection *_socket = swReactor_get(SwooleG.main_reactor, pipe_read_fd);
-    bzero(_socket,sizeof(swConnection));
-    _socket->fd = pipe_read_fd;
 
     zanAioBase_thread_pool.onTask = zanAioBase_thread_onTask;
     if (swThreadPool_run(&zanAioBase_thread_pool) < 0)
@@ -152,9 +148,11 @@ start_switch:
     switch(event->type)
     {
     case SW_AIO_WRITE:
+        //需要加锁吗?
         ret = (event->nbytes <= 0)? 0: pwrite(event->fd, event->buf, event->nbytes, event->offset);
         break;
     case SW_AIO_READ:
+        //需要加锁吗?
         ret = (event->nbytes <= 0)? 0: pread(event->fd, event->buf, event->nbytes, event->offset);
         break;
     case SW_AIO_DNS_LOOKUP:
@@ -188,6 +186,8 @@ start_switch:
         }
     }
 
+    //todo:::如果写管道失败怎么办?
+    //无法执行回调，胶水层会有内存泄漏。。。
     pipe_write_fd = zan_aio_pipe.getFd(&zan_aio_pipe, 1);
     do
     {
@@ -251,6 +251,7 @@ int zanAio_dns_lookup(int flags,void *dns_req, void *ip_addr, size_t size)
     if (SW_OK != swThreadPool_dispatch(&zanAioBase_thread_pool, aio_ev, sizeof(aio_ev)))
     {
         //何时释放 dns_req, ip_addr 呢?
+        //胶水层的一些 zval 如何释放?
         zanError("swThreadPool_dispatch failed.");
         sw_free(aio_ev);
         return ZAN_ERR;
@@ -293,6 +294,7 @@ static int zanAioBase_task(int fd, void *inbuf, size_t size, off_t offset, int t
     if (swThreadPool_dispatch(&zanAioBase_thread_pool, aio_ev, sizeof(aio_ev)) < 0)
     {
         //这种场景如何释放 inbuf 呢?
+        //胶水层的一些 zval 如何释放?
         zanError("swThreadPool_dispatch failed, task_type=%d.", task_type);
         sw_free(aio_ev);
         return ZAN_ERR;

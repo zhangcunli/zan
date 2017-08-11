@@ -18,6 +18,8 @@
 
 #include "zanSocket.h"
 
+///TODO:::socket 操作，设置，send 及 recv 相关操作；
+
 int zan_nonblocking(int fd, int isNonblock)
 {
     int opts, ret;

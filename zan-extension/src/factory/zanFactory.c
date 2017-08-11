@@ -31,7 +31,7 @@ typedef struct _zanNotify_data
     swDataHead _send;
 } zanNotify_data;
 
-static __thread zanNotify_data zan_notify_data;
+//static __thread zanNotify_data zan_notify_data;
 
 static int zanFactory_start(zanFactory *factory);
 static int zanFactory_notify(zanFactory *factory, swDataHead *event);
@@ -40,17 +40,23 @@ static int zanFactory_finish(zanFactory *factory, swSendData *data);
 static int zanFactory_shutdown(zanFactory *factory);
 static int zanFactory_end(zanFactory *factory, int fd);
 
+///TODO:::factory 的功能，要将消息分发抽离吗???
 /*
-  1. 根据用户配置的 server 运行模式，启动不同的模式，暂时只支持多进程，在 start 接口中区分
-     start 接口创建子进程及子进程资源
-  2. 消息分发 net_worker 将消息分发给不同的 worker
-     将 client 发送来的消息分发给 worker 进程，根据用户配置的分发模式
-     新的 client 连接后，将 onRecevie 消息通知给 worker
+  1. 根据用户配置的 server 运行模式，启动不同的模式，暂时只支持多进程
+     统一入口 start 接口，创建子进程及子进程资源
+
+  2. 运行模式和消息分发是相关联的
+     收到 client 的消息，net_worker 将消息分发给不同的 worker，分发机制可配置
+     worker 发送消息给 client，finish 接口，将消息发送到 reactor，再发送到 client
+     client connect、close，将消息通知给 worker
+
+  3. 需要精简 factory 功能吗?
 */
 
 int zanFactory_create(zanFactory *factory)
 {
-    if (!factory){
+    if (!factory)
+    {
         zanError("error, factory is null.");
         return ZAN_ERR;
     }
@@ -129,21 +135,17 @@ static int zanFactory_start(zanFactory *factory)
 //swReactorThread_onClose
 static int zanFactory_notify(zanFactory *factory, swDataHead *ev)
 {
-    if (!factory)
+    zanNotify_data notify_data;
+    if (!factory || !ev)
     {
-        zanError("factory is null");
-        return ZAN_ERR;
-    }
-    if (!ev)
-    {
-        zanError("swDataHead *ev is null");
+        zanError("factory=%p or ev=%p is null", factory, ev);
         return ZAN_ERR;
     }
 
-    memcpy(&zan_notify_data._send, ev, sizeof(swDataHead));
-    zan_notify_data._send.len = 0;
-    zan_notify_data.target_worker_id = -1;
-    return factory->dispatch(factory, (swDispatchData *) &zan_notify_data);
+    memcpy(&notify_data._send, ev, sizeof(swDataHead));
+    notify_data._send.len = 0;
+    notify_data.target_worker_id = -1;
+    return factory->dispatch(factory, (swDispatchData *) &notify_data);
 }
 
 /**
@@ -156,14 +158,9 @@ static int zanFactory_dispatch(zanFactory *factory, swDispatchData *task)
     uint16_t to_worker_id = -1;
     swServer *serv = SwooleG.serv;
 
-    if (!factory)
+    if (!factory || !task)
     {
-        zanError("factory is null");
-        return ZAN_ERR;
-    }
-    if (!task)
-    {
-        zanError("task is null");
+        zanError("factory=%p or task=%p is null", factory, task);
         return ZAN_ERR;
     }
 
@@ -210,10 +207,18 @@ static int zanFactory_dispatch(zanFactory *factory, swDispatchData *task)
 //send data to client
 static int zanFactory_finish(zanFactory *factory, swSendData *resp)
 {
-    int ret, sendn;
-    swServer *serv = factory->ptr;
-    int fd = resp->info.fd;
+    int ret, sendn, fd;
+    swServer *serv;
 
+    if (!factory || !resp)
+    {
+        zanError("factory=%p or resp=%p is null", factory, resp);
+        return ZAN_ERR;
+    }
+
+    //todo:::
+    serv = factory->ptr;
+    fd = resp->info.fd;
     swConnection *conn = swServer_connection_verify(serv, fd);
     if (!conn)
     {
@@ -272,19 +277,20 @@ static int zanFactory_finish(zanFactory *factory, swSendData *resp)
     }
 
     ev_data.info.from_id = conn->from_id;
-
     sendn = ev_data.info.len + sizeof(resp->info);
     zanTrace("[Worker] send: sendn=%d|type=%d|content=%s", sendn, resp->info.type, resp->data);
+
     ret = swWorker_send2reactor(&ev_data, sendn, fd);
     if (ret < 0)
     {
-        zanSysError("sendto to reactor failed.");
+        zanError("sendto to reactor failed.");
     }
 
     return ret;
 }
 
 //关闭连接
+//TODO:::
 //1. server: close 接口
 //2. SW_EVENT_CLOSE 事件
 static int zanFactory_end(zanFactory *factory, int fd)
@@ -298,6 +304,7 @@ static int zanFactory_end(zanFactory *factory, int fd)
     _send.info.len  = 0;
     _send.info.type = SW_EVENT_CLOSE;
 
+    //1. get and verify connection, then close the conn
     swConnection *conn = swWorker_get_connection(serv, fd);
     if (conn == NULL || conn->active == 0)
     {
