@@ -363,6 +363,7 @@ if test "$PHP_ZAN" != "no"; then
         src/util/zanLog.c \
         src/util/zanProcess.c \
         src/util/zanThread.c \
+        src/util/zanSystem.c \
         src/network/zanSocket.c \
         src/dns/DNS.c \
         src/signal/Signal.c \
