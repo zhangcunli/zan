@@ -71,6 +71,20 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_nova_encode, 0, 0, 8)
     ZEND_ARG_INFO(1, buf)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_nova_decode_new, 0, 0, 1)
+    ZEND_ARG_INFO(0, buf)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_nova_encode_new, 0, 0, 7)
+    ZEND_ARG_INFO(0, service_name)
+    ZEND_ARG_INFO(0, method_name)
+    ZEND_ARG_INFO(0, ip)
+    ZEND_ARG_INFO(0, port)
+    ZEND_ARG_INFO(0, seq_no)
+    ZEND_ARG_INFO(0, attach)
+    ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_is_nova_packet, 0, 0, 1)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
@@ -176,6 +190,8 @@ const zend_function_entry zan_functions[] =
     /*------nova_packet------*/
     PHP_FE(nova_decode, arginfo_nova_decode)
     PHP_FE(nova_encode, arginfo_nova_encode)
+    PHP_FE(nova_decode_new, arginfo_nova_decode_new)
+    PHP_FE(nova_encode_new, arginfo_nova_encode_new)
     PHP_FE(is_nova_packet, arginfo_is_nova_packet)
     PHP_FE(nova_get_sequence, NULL)
     PHP_FE(nova_get_time, NULL)
@@ -288,6 +304,9 @@ void swoole_set_object(zval *object, void *ptr)
     {
 		uint32_t old_size = swoole_objects.size;
 		uint32_t new_size = old_size * 2;
+		while(new_size < handle) {
+			new_size *= 2;
+		}
 		new_size = (new_size > SWOOLE_OBJECT_MAX)? SWOOLE_OBJECT_MAX:new_size;
 
 		void *old_ptr = swoole_objects.array;

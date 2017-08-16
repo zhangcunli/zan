@@ -279,14 +279,14 @@ static int swReactorKqueue_wait(swReactor *reactor, struct timeval *timeo)
 
     if (reactor->timeout_msec == 0)
     {
-        reactor->timeout_msec = (timeo == NULL)? -1:timeo->tv_sec * 1000 + timeo->tv_usec / 1000;
+    	reactor->timeout_msec = (timeo == NULL)? -1:timeo->tv_sec * 1000 + timeo->tv_usec / 1000;
     }
 
     while (reactor->running > 0)
     {
         if (reactor->timeout_msec > 0 || reactor->defer_callback_list)
         {
-            int32_t timeout_msec = reactor->defer_callback_list? 1:reactor->timeout_msec;
+	    	int32_t timeout_msec = reactor->defer_callback_list? 1:reactor->timeout_msec;
             t.tv_sec = timeout_msec / 1000;
             t.tv_nsec = (timeout_msec - t.tv_sec * 1000) * 1000;
             t_ptr = &t;
@@ -301,7 +301,7 @@ static int swReactorKqueue_wait(swReactor *reactor, struct timeval *timeo)
         {
             if (swReactor_error(reactor) < 0)
             {
-                swWarn("Kqueue[#%d].", reactor->id);
+            	swWarn("Kqueue[#%d].", reactor->id);
                 return SW_ERR;
             }
             else
@@ -335,10 +335,10 @@ static int swReactorKqueue_wait(swReactor *reactor, struct timeval *timeo)
                     {
                         handle = swReactor_getHandle(reactor, SW_EVENT_READ, event.type);
                         ret = handle(reactor, &event);
-                        if (ret < 0)
-                        {
-                            swSysError("kqueue event read socket#%d handler failed.", event.fd);
-                        }
+						if (ret < 0)
+						{
+							swSysError("kqueue event read socket#%d handler failed.", event.fd);
+						}
                     }
                 }
                 //write
@@ -347,16 +347,16 @@ static int swReactorKqueue_wait(swReactor *reactor, struct timeval *timeo)
                     if(!event.socket->removed)
                     {
                         handle = swReactor_getHandle(reactor, SW_EVENT_WRITE, event.type);
-                        ret = handle(reactor, &event);
-                        if (ret < 0)
-                        {
-                            swError("kqueue event write socket#%d handler failed.", event.fd);
-                        }
+						ret = handle(reactor, &event);
+						if (ret < 0)
+						{
+							swError("kqueue event write socket#%d handler failed.", event.fd);
+						}
                     }
                 }
                 else
                 {
-                    swWarn("kqueue event unknow filter=%d", object->events[i].filter);
+                	swWarn("kqueue event unknow filter=%d", object->events[i].filter);
                 }
             }
         }

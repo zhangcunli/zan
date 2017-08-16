@@ -18,6 +18,7 @@
 
 #include "swLock.h"
 
+
 #ifdef HAVE_SPINLOCK
 static int swSpinLock_lock(swLock *lock);
 static int swSpinLock_unlock(swLock *lock);
@@ -27,9 +28,9 @@ static int swSpinLock_free(swLock *lock);
 
 int swSpinLock_create(swLock *lock, int use_in_process)
 {
-    if (!lock){
-        return SW_ERR;
-    }
+	if (!lock){
+		return SW_ERR;
+	}
 
     bzero(lock, sizeof(swLock));
     if (pthread_spin_init(&lock->object.spinlock.lock_t, use_in_process) < 0)

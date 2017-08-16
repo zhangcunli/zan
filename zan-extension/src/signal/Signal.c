@@ -28,6 +28,8 @@ static void swSignalfd_set(int signo, __sighandler_t callback);
 static void swSignalfd_clear();
 static int swSignalfd_onSignal(swReactor *reactor, swEvent *event);
 
+#define SW_SIGNAL_INIT_NUM    8
+
 static sigset_t signalfd_mask;
 static int signal_fd = 0;
 #endif
@@ -68,7 +70,7 @@ swSignalFunc swSignal_set(int sig, swSignalFunc func, int restart, int mask)
     }
     else if ((long)func == -1)
     {
-        func = SIG_DFL;
+    	func = SIG_DFL;
     }
 
     struct sigaction act, oact;
@@ -145,14 +147,14 @@ void swSignal_clear(void)
     else
 #endif
     {
-        int index = 0;
-        for (index = 0;index < SW_SIGNO_MAX;index++)
-        {
-            if (signals[index].active)
+    	int index = 0;
+    	for (index = 0;index < SW_SIGNO_MAX;index++)
+    	{
+    		if (signals[index].active)
             {
                 swSignal_set(signals[index].signo, (swSignalFunc) -1, 1, 0);
             }
-        }
+    	}
     }
 
     bzero(&signals,sizeof(signals));
@@ -202,8 +204,8 @@ int swSignalfd_setup(swReactor *reactor)
         SwooleG.signal_fd = signal_fd;
         if (sigprocmask(SIG_BLOCK, &signalfd_mask, NULL) == -1)
         {
-            swSysError("sigprocmask() failed.");
-            return SW_ERR;
+			swSysError("sigprocmask() failed.");
+			return SW_ERR;
         }
         reactor->setHandle(reactor, SW_FD_SIGNAL, swSignalfd_onSignal);
         reactor->add(reactor, signal_fd, SW_FD_SIGNAL);

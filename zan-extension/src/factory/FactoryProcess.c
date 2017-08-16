@@ -16,6 +16,7 @@
  +----------------------------------------------------------------------+
  */
 
+#include "php_swoole.h"
 #include "swLog.h"
 #include "swError.h"
 #include "swWork.h"
@@ -257,6 +258,11 @@ static int swFactoryProcess_finish(swFactory *factory, swSendData *resp)
     if (ret < 0)
     {
         swSysError("sendto to reactor failed.");
+    }
+
+    if (SwooleWG.fatal_error) {
+        SWOOLE_FETCH_TSRMLS;
+        zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
     }
 
     return ret;

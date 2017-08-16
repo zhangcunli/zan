@@ -17,7 +17,6 @@
 */
 
 #include "swLock.h"
-#include "swLog.h"
 
 static int swMutex_lock(swLock *lock);
 static int swMutex_unlock(swLock *lock);
@@ -30,7 +29,7 @@ int swMutex_create(swLock *lock, int use_in_process)
     {
         return SW_ERR;
     }
-
+    
     bzero(lock, sizeof(swLock));
 
     pthread_mutexattr_init(&lock->object.mutex.attr);
@@ -81,23 +80,23 @@ int swMutex_lockwait(swLock *lock, int timeout_msec)
 {
     int sub = 1;
     int sleep_ms = 1000;
-
+    
     if (timeout_msec > 100)
     {
         sub = 10;
         sleep_ms = 10000;
     }
-
+    
     while( timeout_msec > 0)
     {
         if (pthread_mutex_trylock(&lock->object.mutex._lock)< 0)
         {
-            usleep(sleep_ms);
-            timeout_msec -= sub;
+        	usleep(sleep_ms);
+        	timeout_msec -= sub;
         }
         else
         {
-            return 0;
+        	return 0;
         }
     }
     return ETIMEDOUT;
@@ -108,4 +107,3 @@ static int swMutex_free(swLock *lock)
 {
     return pthread_mutex_destroy(&lock->object.mutex._lock);
 }
-
