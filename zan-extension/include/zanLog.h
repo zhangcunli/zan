@@ -15,6 +15,7 @@
   | Author: Zan Group   <zan@zanphp.io>                                  |
   +----------------------------------------------------------------------+
 */
+
 #ifndef _ZAN_ZANLOG_H_
 #define _ZAN_ZANLOG_H_
 
