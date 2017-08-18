@@ -347,6 +347,8 @@ if test "$PHP_ZAN" != "no"; then
         src/network/Socket.c \
         src/network/TaskWorker.c \
         src/network/Worker.c \
+        src/network/zanSocket.c \
+        src/network/zanServer.c \
         src/protocol/Base.c \
         src/protocol/Base64.c \
         src/protocol/Http.c \
@@ -364,7 +366,6 @@ if test "$PHP_ZAN" != "no"; then
         src/util/zanProcess.c \
         src/util/zanThread.c \
         src/util/zanSystem.c \
-        src/network/zanSocket.c \
         src/dns/DNS.c \
         src/signal/Signal.c \
         src/ipc/zanCond.c \
@@ -375,7 +376,9 @@ if test "$PHP_ZAN" != "no"; then
         src/ipc/zanShm.c \
         src/aio/AsyncIO.c \
         src/aio/zanAio.c \
-        src/timer/Timer.c"
+        src/timer/Timer.c \
+        src/workers/zanWorker.c \
+        src/workers/zanMaster.c"
 
 
     swoole_source_file="$swoole_source_file thirdparty/php_http_parser.c"

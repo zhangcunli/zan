@@ -25,12 +25,12 @@
 #include <sys/resource.h>
 
 #include "zanGlobalDef.h"
-#include "zanSystem.h"
 
 void swoole_init(void)
 {
     if (SwooleG.running)
     {
+        printf("swoole is running.....\n");
         return;
     }
 
@@ -184,28 +184,6 @@ void zan_init(void)
     bzero(&ServerG, sizeof(zanServerG));
     bzero(&ServerWG, sizeof(zanWorkerG));
 
-    ServerG.running     = 1;
-    ServerG.error       = 0;
-    ServerG.log_fd      = STDOUT_FILENO;
-    ServerG.cpu_num     = zan_sysconf(_SC_NPROCESSORS_ONLN);
-    ServerG.pagesize    = zan_sysconf(_SC_PAGESIZE);
-    ServerG.process_pid = zan_getpid();
-    ServerG.serverSet.socket_buffer_size = SW_SOCKET_BUFFER_SIZE;
-
-    zan_uname(&ServerG.uname);
-
-    struct rlimit rlmt;          /// 获取进程支持的最大文件描述符数
-    SwooleG.max_sockets = (zan_getrlimit(RLIMIT_NOFILE, &rlmt) < 0)? 1024:(uint32_t) rlmt.rlim_cur;
-
-    SwooleG.use_timer_pipe = 1;  ///
-
-#if defined(HAVE_REUSEPORT) && defined(HAVE_EPOLL)
-    if (swoole_version_compare(ServerG.uname.release, "3.9.0") >= 0)
-    {
-        ServerG.reuse_port = 1;
-    }
-#endif
-
     //init global shared memory, 初始化内存池
     ServerG.g_shm_pool = zanShmGlobal_new(ZAN_GLOBAL_MEMORY_PAGESIZE, 1);
     if (NULL == ServerG.g_shm_pool)
@@ -238,6 +216,7 @@ void zan_init(void)
     ServerStatsG = ServerG.g_shm_pool->alloc(ServerG.g_shm_pool, sizeof(zanServerStats));
     if (NULL == ServerStatsG)
     {
+        exit(2);
         printf("[Master] Fatal Error: alloc memory for SwooleStats failed.");
     }
 
@@ -309,5 +288,6 @@ void zan_set_loglevel(int level)
     ServerGS->log_level = level;
     ServerGS->log_lock.unlock(&ServerGS->log_lock);
 }
+
 
 

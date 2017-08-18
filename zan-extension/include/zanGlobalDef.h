@@ -32,6 +32,7 @@
 #include "zanMemory/zanShmPool.h"
 #include "zanProcess.h"
 #include "zanAsyncIo.h"
+#include "zanReactor.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -184,11 +185,12 @@ typedef struct _zanServerSet
                             //        5. UID 分配
 
     /*task workers*/
-    uint8_t  task_ipc_mode;
-    uint32_t task_worker_num;
-    uint32_t task_max_request;
+    uint8_t   task_ipc_mode;
+    uint32_t  task_worker_num;
+    uint32_t  task_max_request;
     char     *task_tmpdir;
-    uint64_t message_queue_key;  //task_worker msgqueue key
+    uint16_t  task_tmpdir_len;
+    uint64_t  message_queue_key;  //task_worker msgqueue key
 
     /*log set*/
     char     *log_file;
@@ -199,7 +201,7 @@ typedef struct _zanServerSet
     char *user;
     char *group;
 
-    char *pid_file;         /* TODO::: pid file */
+    char *pid_file;                    /* TODO::: pid file */
 
     uint16_t heartbeat_idle_time;      //心跳存活时间
     uint16_t heartbeat_check_interval; //心跳定时侦测时间, 小于heartbeat_idle_time
@@ -207,7 +209,7 @@ typedef struct _zanServerSet
     uint32_t buffer_output_size;
     uint32_t buffer_input_size;
 
-    uint32_t socket_buffer_size;     /* Unix socket default buffer size*/
+    uint32_t socket_buffer_size;      /* Unix socket default buffer size*/
     uint32_t pipe_buffer_size;
 
     uint16_t daemonize :1;
@@ -248,12 +250,11 @@ typedef struct _zanServerG
 
     struct utsname uname;
 
-    zanServerSet serverSet;
-
-    zanServer  *serv;
-    swReactor  *main_reactor;     //for accept
-    zanFactory *factory;
-    zanShmPool *g_shm_pool;
+    zanServerSet  serverSet;
+    zanServer    *serv;
+    swReactor   *main_reactor;     //for accept
+    zanFactory   *factory;
+    zanShmPool   *g_shm_pool;
 } zanServerG;
 
 //==============================================================================

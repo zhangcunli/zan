@@ -19,6 +19,7 @@
 #include "zanSystem.h"
 
 //todo::: 跨平台
+//错误处理
 
 zan_pid_t zan_getpid(void)
 {

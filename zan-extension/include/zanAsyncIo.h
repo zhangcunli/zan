@@ -42,10 +42,8 @@ typedef struct _zanAsyncIO
     void (*destroy)(void);
 } zanAsyncIO;
 
-void zanAio_callback_test(swAio_event *aio_event);
 int  zanAio_init(void);
 void zanAio_free(void);
-
 int  zanAio_dns_lookup(int type,void *hostname, void *ip_addr, size_t size);
 
 #endif  //_ZAN_ZANASYNCIO_H_
