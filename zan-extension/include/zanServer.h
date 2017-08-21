@@ -16,28 +16,28 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef _ZAN_SYSTEM_H_
-#define _ZAN_SYSTEM_H_
 
-#include <sys/resource.h>
-#include <sys/utsname.h>
-#include "zanProcess.h"
+#ifndef _ZAN_SERVER_H_
+#define _ZAN_SERVER_H_
+
+#include "zanGlobalDef.h"
+
+#ifdef SW_USE_OPENSSL
+#include "swProtocol/ssl.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//todo::跨平台
-
-zan_pid_t zan_getpid(void);
-zan_pid_t zan_getppid(void);
-long zan_sysconf(int name);
-int zan_uname(struct utsname *buf);
-int zan_getrlimit(int resource, struct rlimit *rlim);
+//========== TODO:::
+void zanServer_init(zanServer *serv);
+int zanServer_create(zanServer *serv);
+int zanServer_start(zanServer *serv);
+void zanServer_clean(zanServer *serv);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif
+#endif /* _ZAN_SERVER_H_ */
