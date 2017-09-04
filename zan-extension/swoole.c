@@ -186,7 +186,7 @@ const zend_function_entry zan_functions[] =
 {
     PHP_FE(swoole_version, NULL)
     PHP_FE(swoole_cpu_num, NULL)
-    
+
     /*------nova_packet------*/
     PHP_FE(nova_decode, arginfo_nova_decode)
     PHP_FE(nova_encode, arginfo_nova_encode)
@@ -196,7 +196,7 @@ const zend_function_entry zan_functions[] =
     PHP_FE(nova_get_sequence, NULL)
     PHP_FE(nova_get_time, NULL)
     PHP_FE(nova_get_ip, NULL)
-    
+
     /*------swoole_event-----*/
     PHP_FE(swoole_event_add, arginfo_swoole_event_add)
     PHP_FE(swoole_event_set, arginfo_swoole_event_set)
@@ -210,7 +210,7 @@ const zend_function_entry zan_functions[] =
     PHP_FE(swoole_timer_tick, arginfo_swoole_timer_tick)
     PHP_FE(swoole_timer_exists, arginfo_swoole_timer_exists)
     PHP_FE(swoole_timer_clear, arginfo_swoole_timer_clear)
-	PHP_FE(swoole_timer_set,arginfo_swoole_timer_set)
+    PHP_FE(swoole_timer_set,arginfo_swoole_timer_set)
     /*------swoole_async_io------*/
     PHP_FE(swoole_async_set, arginfo_swoole_async_set)
     PHP_FE(swoole_async_read, arginfo_swoole_async_read)
@@ -218,18 +218,20 @@ const zend_function_entry zan_functions[] =
     PHP_FE(swoole_async_dns_lookup, arginfo_swoole_async_dns_lookup)
     PHP_FE(swoole_clean_dns_cache,arginfo_swoole_void)
 
-	/*------other-----*/
+    /*------other-----*/
     PHP_FE(swoole_client_select, arginfo_swoole_client_select)
     PHP_FE(swoole_set_process_name, arginfo_swoole_set_process_name)
     PHP_FE(swoole_strerror, arginfo_swoole_strerror)
     PHP_FE(swoole_errno, arginfo_swoole_void)
-	PHP_FE(swoole_get_local_ip, arginfo_swoole_void)
+    PHP_FE(swoole_get_local_ip, arginfo_swoole_void)
 
-	PHP_FE(onClientClose,NULL)
-	PHP_FE(onClientTimeout,NULL)
+#if 0
+    PHP_FE(onClientClose,NULL)
+    PHP_FE(onClientTimeout,NULL)
     PHP_FE(onClientConnect,NULL)
     PHP_FE(onClientRecieve,NULL)
     PHP_FE(onSubClientConnect,NULL)
+#endif
 
     PHP_FE_END /* Must be the last line in swoole_functions[] */
 };
@@ -302,28 +304,28 @@ void swoole_set_object(zval *object, void *ptr)
     assert(handle < SWOOLE_OBJECT_MAX);
     if (handle >= swoole_objects.size)
     {
-		uint32_t old_size = swoole_objects.size;
-		uint32_t new_size = old_size * 2;
-		while(new_size < handle) {
-			new_size *= 2;
-		}
-		new_size = (new_size > SWOOLE_OBJECT_MAX)? SWOOLE_OBJECT_MAX:new_size;
+        uint32_t old_size = swoole_objects.size;
+        uint32_t new_size = old_size * 2;
+        while(new_size < handle) {
+            new_size *= 2;
+        }
+        new_size = (new_size > SWOOLE_OBJECT_MAX)? SWOOLE_OBJECT_MAX:new_size;
 
-		void *old_ptr = swoole_objects.array;
-		void *new_ptr = realloc(old_ptr, sizeof(void*) * new_size);
-		if (!new_ptr)
-		{
-			swWarn("alloc global memory failed");
-			return ;
-		}
+        void *old_ptr = swoole_objects.array;
+        void *new_ptr = realloc(old_ptr, sizeof(void*) * new_size);
+        if (!new_ptr)
+        {
+            swWarn("alloc global memory failed");
+            return ;
+        }
 
-		bzero(new_ptr + (old_size * sizeof(void*)), (new_size - old_size) * sizeof(void*));
-		swoole_objects.array = new_ptr;
-		swoole_objects.size = new_size;
-	}
+        bzero(new_ptr + (old_size * sizeof(void*)), (new_size - old_size) * sizeof(void*));
+        swoole_objects.array = new_ptr;
+        swoole_objects.size = new_size;
+    }
 
-	swoole_objects.array[handle] = ptr;
-	return ;
+    swoole_objects.array[handle] = ptr;
+    return ;
 }
 
 void* swoole_get_object(zval *object)
@@ -379,7 +381,7 @@ void swoole_set_property(zval *object, int property_id, void *ptr)
             new_size = old_size * 2;
             while (new_size < handle)
             {
-            	new_size = 2*new_size;
+                new_size = 2*new_size;
             }
 
             if (new_size > SWOOLE_OBJECT_MAX)
@@ -462,8 +464,8 @@ PHP_MINIT_FUNCTION(zan)
     REGISTER_LONG_CONSTANT("SWOOLE_SYNC", SW_FLAG_SYNC, CONST_CS | CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("SWOOLE_ASYNC", SW_FLAG_ASYNC, CONST_CS | CONST_PERSISTENT);
 
-	REGISTER_LONG_CONSTANT("SWOOLE_ASYNC_CONNECT_TIMEOUT", SW_CLIENT_CONNECT_TIMEOUT, CONST_CS | CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("SWOOLE_ASYNC_RECV_TIMEOUT", SW_CLIENT_RECV_TIMEOUT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("SWOOLE_ASYNC_CONNECT_TIMEOUT", SW_CLIENT_CONNECT_TIMEOUT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("SWOOLE_ASYNC_RECV_TIMEOUT", SW_CLIENT_RECV_TIMEOUT, CONST_CS | CONST_PERSISTENT);
 
 #ifdef SW_USE_OPENSSL
     REGISTER_LONG_CONSTANT("SWOOLE_SSL", SW_SOCK_SSL, CONST_CS | CONST_PERSISTENT);
@@ -501,35 +503,34 @@ PHP_MINIT_FUNCTION(zan)
     REGISTER_STRINGL_CONSTANT("SWOOLE_VERSION", PHP_SWOOLE_VERSION, sizeof(PHP_SWOOLE_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
 
     //swoole init
-	swoole_init();
+    swoole_init();
+
+    ///TODO:::
+    zan_init();
 
     swoole_server_init(module_number TSRMLS_CC);
+    swoole_client_init(module_number TSRMLS_CC);
+    swoole_server_port_init(module_number TSRMLS_CC);
 
     swoole_timer_init(module_number TSRMLS_CC);
-
-    swoole_server_port_init(module_number TSRMLS_CC);
-    swoole_client_init(module_number TSRMLS_CC);
-
-    swoole_connpool_init(module_number TSRMLS_CC);
-
-    swoole_http_client_init(module_number TSRMLS_CC);
-
-#ifdef SW_USE_REDIS
-    swoole_redis_init(module_number TSRMLS_CC);
-#endif
-    
     swoole_aio_init(module_number TSRMLS_CC);
     swoole_process_init(module_number TSRMLS_CC);
-    swoole_http_server_init(module_number TSRMLS_CC);
     swoole_buffer_init(module_number TSRMLS_CC);
-    swoole_websocket_init(module_number TSRMLS_CC);
 
-    swoole_mysql_init(module_number TSRMLS_CC);
+///TOD:::
+///#ifdef SW_USE_REDIS
+///    swoole_redis_init(module_number TSRMLS_CC);
+///#endif
+////    swoole_connpool_init(module_number TSRMLS_CC);
+////    swoole_http_client_init(module_number TSRMLS_CC);
+////    swoole_http_server_init(module_number TSRMLS_CC);
+////    swoole_websocket_init(module_number TSRMLS_CC);
+////    swoole_mysql_init(module_number TSRMLS_CC);
 
     /// 初始化日志等级
     if (SWOOLE_G(log_level) > 0)
     {
-    		set_log_level(SWOOLE_G(log_level));
+            set_log_level(SWOOLE_G(log_level));
     }
 
     if (SWOOLE_G(socket_buffer_size) > 0)
@@ -696,7 +697,7 @@ PHP_RSHUTDOWN_FUNCTION(zan)
 
     /// clean client information
     swoole_thread_clean();
-	SwooleWG.reactor_wait_onexit = 0;
+    SwooleWG.reactor_wait_onexit = 0;
     return SUCCESS;
 }
 
@@ -749,7 +750,7 @@ PHP_FUNCTION(swoole_set_process_name)
 
     if (Z_STRLEN_P(name) <= 0 || Z_STRLEN_P(name) > 127)
     {
-    	php_error_docref(NULL TSRMLS_CC, E_WARNING, "process name max len is 127");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "process name max len is 127");
         return;
     }
 
@@ -819,7 +820,7 @@ PHP_FUNCTION(swoole_get_local_ip)
         }
         else if (strncmp(ip, "127.",strlen("127.")) != 0)
         {
-          	sw_add_assoc_string(return_value, ifa->ifa_name, ip, 1);
+            sw_add_assoc_string(return_value, ifa->ifa_name, ip, 1);
         }
     }
 

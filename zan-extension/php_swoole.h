@@ -14,7 +14,7 @@
   | zan@zanphp.io so we can mail you a copy immediately.                 |
   +----------------------------------------------------------------------+
   | Author: Tianfeng Han  <mikan.tenny@gmail.com>                        |
-  |         Zan Group   <zan@zanphp.io>                                  |  
+  |         Zan Group   <zan@zanphp.io>                                  |
   +----------------------------------------------------------------------+
 */
 
@@ -46,6 +46,7 @@
 #include "config.h"
 #endif
 
+#include "zanGlobalDef.h"
 #include "swoole.h"
 #include "swServer.h"
 #include "swClient.h"
@@ -77,11 +78,11 @@ extern zend_module_entry zan_module_entry;
 #define phpext_swoole_ptr &zan_module_entry
 
 #ifdef PHP_WIN32
-#	define PHP_SWOOLE_API __declspec(dllexport)
+#   define PHP_SWOOLE_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_SWOOLE_API __attribute__ ((visibility("default")))
+#   define PHP_SWOOLE_API __attribute__ ((visibility("default")))
 #else
-#	define PHP_SWOOLE_API
+#   define PHP_SWOOLE_API
 #endif
 
 #define SWOOLE_PROPERTY_MAX     32
@@ -91,15 +92,15 @@ enum obj_swoole_property
 {
     swoole_property_common = 0,
     swoole_property_socket = 1,
-	swoole_connpool_object = 2,
-	swoole_property_nums
+    swoole_connpool_object = 2,
+    swoole_property_nums
 };
 
 typedef struct
 {
-    void **array;									/// object 数组
-    uint32_t size;									/// object 数组长度
-    void **property[swoole_property_nums];			/// object 属性数组
+    void **array;                                   /// object 数组
+    uint32_t size;                                  /// object 数组长度
+    void **property[swoole_property_nums];          /// object 属性数组
     uint32_t property_size[swoole_property_nums];
 } swoole_object_array;
 
@@ -161,32 +162,32 @@ enum php_swoole_client_callback_type
 //--------------------------------------------------------
 enum php_swoole_server_callback_type
 {
-	SW_SERVER_CB_onConnect,        //worker(event)
-	SW_SERVER_CB_onReceive,        //worker(event)
-	SW_SERVER_CB_onClose,          //worker(event)
-	SW_SERVER_CB_onPacket,         //worker(event)
+    SW_SERVER_CB_onConnect,        //worker(event)
+    SW_SERVER_CB_onReceive,        //worker(event)
+    SW_SERVER_CB_onClose,          //worker(event)
+    SW_SERVER_CB_onPacket,         //worker(event)
 
-	SW_SERVER_CB_onStart,          //master
-	SW_SERVER_CB_onShutdown,       //master
-	SW_SERVER_CB_onWorkerStart,    //worker(event & task)
-	SW_SERVER_CB_onWorkerStop,     //worker(event & task)
-	SW_SERVER_CB_onTask,           //worker(task)
-	SW_SERVER_CB_onFinish,         //worker(event & task)
-	SW_SERVER_CB_onWorkerError,    //manager
-	SW_SERVER_CB_onManagerStart,   //manager
-	SW_SERVER_CB_onManagerStop,    //manager
-	SW_SERVER_CB_onPipeMessage,    //worker(evnet & task)
+    SW_SERVER_CB_onStart,          //master
+    SW_SERVER_CB_onShutdown,       //master
+    SW_SERVER_CB_onWorkerStart,    //worker(event & task)
+    SW_SERVER_CB_onWorkerStop,     //worker(event & task)
+    SW_SERVER_CB_onTask,           //worker(task)
+    SW_SERVER_CB_onFinish,         //worker(event & task)
+    SW_SERVER_CB_onWorkerError,    //manager-->master
+    //SW_SERVER_CB_onManagerStart,   //manager
+    //SW_SERVER_CB_onManagerStop,    //manager
+    SW_SERVER_CB_onPipeMessage,    //worker(evnet & task)
 
-	//--------------------------Swoole\Http\Server----------------------
-	SW_SERVER_CB_onRequest,        //http server
-	//--------------------------Swoole\WebSocket\Server-----------------
-	SW_SERVER_CB_onHandShake,      //worker(event)
-	SW_SERVER_CB_onOpen,           //worker(event)
-	SW_SERVER_CB_onMessage,        //worker(event)
-	//--------------------------Buffer Event----------------------------
-//	SW_SERVER_CB_onBufferFull,     //worker(event)
-//	SW_SERVER_CB_onBufferEmpty,    //worker(event)
-	//-------------------------------END--------------------------------
+    //--------------------------Swoole\Http\Server----------------------
+    SW_SERVER_CB_onRequest,        //http server
+    //--------------------------Swoole\WebSocket\Server-----------------
+    SW_SERVER_CB_onHandShake,      //worker(event)
+    SW_SERVER_CB_onOpen,           //worker(event)
+    SW_SERVER_CB_onMessage,        //worker(event)
+    //--------------------------Buffer Event----------------------------
+//  SW_SERVER_CB_onBufferFull,     //worker(event)
+//  SW_SERVER_CB_onBufferEmpty,    //worker(event)
+    //-------------------------------END--------------------------------
 };
 
 #define PHP_SERVER_CALLBACK_NUM             (SW_SERVER_CB_onMessage+1)
@@ -352,6 +353,8 @@ PHP_FUNCTION(swoole_timer_exists);
 PHP_FUNCTION(swoole_client_select);
 
 
+#if 0
+////TODO:::
 //---------------------------------------------------------
 //                  swoole_connpool callback api
 //---------------------------------------------------------
@@ -361,7 +364,7 @@ ZEND_FUNCTION(onClientClose);
 ZEND_FUNCTION(onClientTimeout);
 ZEND_FUNCTION(onClientRecieve);
 ZEND_FUNCTION(onSubClientConnect);
-
+#endif
 
 //---------------------------------------------------------
 //                 others global api
@@ -370,7 +373,7 @@ PHP_FUNCTION(swoole_strerror);
 PHP_FUNCTION(swoole_errno);
 
 //---------------------------------------------------------
-// 					 		end
+//                          end
 //---------------------------------------------------------
 
 extern zval *php_sw_server_callbacks[PHP_SERVER_CALLBACK_NUM];
@@ -378,7 +381,7 @@ extern zval *php_sw_server_callbacks[PHP_SERVER_CALLBACK_NUM];
 extern zval _php_sw_server_callbacks[PHP_SERVER_CALLBACK_NUM];
 #endif
 
-extern zval *php_swoole_server_get_callback(swServer *serv, int server_fd, int event_type);
+extern zval *php_swoole_server_get_callback(zanServer *serv, int server_fd, int event_type);
 
 void swoole_destroy_table(zend_resource *rsrc TSRMLS_DC);
 
@@ -410,7 +413,8 @@ void php_swoole_at_shutdown(char *function);
 void php_swoole_event_init();
 void php_swoole_event_wait();
 
-void php_swoole_register_callback(swServer *serv);
+//void php_swoole_register_callback(swServer *serv);
+void php_swoole_register_callback(zanServer *serv);
 void php_swoole_client_free(zval *object, swClient *cli TSRMLS_DC);
 swClient* php_swoole_client_new(zval *object, char *host, int host_len, int port,swClient** cli);
 zval* php_swoole_websocket_unpack(swString *data TSRMLS_DC);
@@ -426,21 +430,21 @@ static sw_inline void php_swoole_sha1(const char *str, int _len, unsigned char *
 
 static sw_inline int swoole_check_callable(zval *callback TSRMLS_DC)
 {
-	if (!callback || ZVAL_IS_NULL(callback))
-	{
-		return SW_ERR;
-	}
+    if (!callback || ZVAL_IS_NULL(callback))
+    {
+        return SW_ERR;
+    }
 
-	char *func_name = NULL;
-	int iRet = sw_zend_is_callable(callback, 0, &func_name TSRMLS_CC)? SW_OK:SW_ERR;
+    char *func_name = NULL;
+    int iRet = sw_zend_is_callable(callback, 0, &func_name TSRMLS_CC)? SW_OK:SW_ERR;
 
-	if (func_name)
-	{
-		if (iRet < 0) swoole_php_fatal_error(E_ERROR, "Function '%s' is not callable", func_name);
-		swoole_efree(func_name);
-	}
+    if (func_name)
+    {
+        if (iRet < 0) swoole_php_fatal_error(E_ERROR, "Function '%s' is not callable", func_name);
+        swoole_efree(func_name);
+    }
 
-	return iRet;
+    return iRet;
 }
 
 void swoole_set_object(zval *object, void *ptr);
@@ -453,19 +457,23 @@ void* swoole_get_property(zval *object, int property_id);
 php_socket *swoole_convert_to_socket(int sock);
 #endif
 
-void php_swoole_server_before_start(swServer *serv, zval *zobject TSRMLS_DC);
+void php_swoole_server_before_start(zanServer *serv, zval *zobject TSRMLS_DC);
+//void php_swoole_server_before_start(swServer *serv, zval *zobject TSRMLS_DC);
 int php_swoole_get_send_data(zval *zdata, char **str TSRMLS_DC);
 void php_swoole_get_recv_data(zval *zdata, swEventData *req, char *header, uint32_t header_length TSRMLS_DC);
-void php_swoole_onConnect(swServer *serv, swDataHead *);
-int php_swoole_onReceive(swServer *serv, swEventData *req);
-void php_swoole_onClose(swServer *, swDataHead *);
+//void php_swoole_onConnect(swServer *serv, swDataHead *);
+void php_swoole_onConnect(zanServer *serv, swDataHead *);
+//int php_swoole_onReceive(swServer *serv, swEventData *req);
+int php_swoole_onReceive(zanServer *serv, swEventData *req);
+//void php_swoole_onClose(swServer *, swDataHead *);
+void php_swoole_onClose(zanServer *, swDataHead *);
 
 #define php_swoole_array_get_value(ht, str, v)     (sw_zend_hash_find(ht, str, sizeof(str), (void **) &v) == SUCCESS && !ZVAL_IS_NULL(v))
 #define php_swoole_array_get_ptr_value(ht, str, v)     (sw_zend_hash_find(ht, str, strlen(str)+1, (void **) &v) == SUCCESS && !ZVAL_IS_NULL(v))
 
 ZEND_BEGIN_MODULE_GLOBALS(swoole)
     long aio_thread_num;
-	long log_level;
+    long log_level;
     zend_bool display_errors;
     zend_bool cli;
     zend_bool use_namespace;
@@ -489,4 +497,4 @@ extern ZEND_DECLARE_MODULE_GLOBALS(swoole);
         INIT_CLASS_ENTRY(ce, name, methods); \
     }
 
-#endif	/* PHP_SWOOLE_H */
+#endif  /* PHP_SWOOLE_H */

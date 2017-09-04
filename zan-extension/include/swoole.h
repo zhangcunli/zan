@@ -242,6 +242,7 @@ double swoole_microtime(void);
 void set_log_level();
 
 //=============================
+//for test
 enum zanServer_mode
 {
     ZAN_MODE_BASE          =  1,
