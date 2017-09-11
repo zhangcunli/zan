@@ -26,10 +26,11 @@
 #include "swBaseData.h"
 #include "swStats.h"
 
+#include "zanIpc.h"
 #include "zanAtomic.h"
 #include "zanMemory/zanShmPool.h"
 #include "zanProcess.h"
-#include "zanAsyncIo.h"
+//#include "zanAsyncIo.h"
 #include "zanReactor.h"
 #include "zanFactory.h"
 #include "zanWorkers.h"
@@ -119,7 +120,7 @@ typedef struct _zanServerGS
 
     uint32_t     session_round;          //????
 
-    zanLock      master_lock;
+    zanLock      lock;
     zanLock      log_lock;
     uint8_t      log_level;
     zan_atomic_t spinlock;
@@ -211,7 +212,7 @@ typedef struct _zanServerG
     uint8_t socket_dontwait :1;
     uint8_t disable_dns_cache :1;
     uint8_t dns_lookup_random: 1;
-    uint8_t use_timer_pipe :1;       /* Timer used pipe */
+    uint8_t use_timer_pipe :1;
 
     uint8_t   factory_mode;
     uint8_t   process_type;
@@ -220,7 +221,7 @@ typedef struct _zanServerG
     pthread_t heartbeat_tid;   ///TODO:::
 
     int error;
-    int signal_alarm;  //for timer with message queue
+    int signal_alarm;
     int log_fd;
     int null_fd;
 
@@ -272,18 +273,6 @@ typedef struct _zanServerStats
     zanWorkerStats      *workers_state;
     zanLock             lock;
 } zanServerStats;
-
-//==============================================================================
-extern zanServerG   ServerG;              //Local Global Variable
-extern zanServerGS *ServerGS;             //Share Memory Global Variable
-extern zanWorkerG   ServerWG;             //Worker Global Variable
-extern __thread zanThreadG ServerTG;      //Thread Global Variable
-extern zanServerStats *ServerStatsG;
-
-extern zanAsyncIO ZanAIO;
-
-#define ZAN_CPU_NUM           (SwooleG.cpu_num)
-#define ZAN_REACTOR_NUM       ZAN_CPU_NUM
 
 #ifdef __cplusplus
 }
