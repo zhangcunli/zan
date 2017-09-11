@@ -203,7 +203,7 @@ static int zanFactory_finish(zanFactory *factory, swSendData *resp)
     swConnection *conn = zanServer_verify_connection(serv, session_id);
     if (!conn)
     {
-        zanWarn("session#fd=%d does not exist.", fd);
+        zanWarn("session#fd=%d does not exist.", session_id);
         return ZAN_ERR;
     }
     else if ((conn->closed || conn->removed) && resp->info.type != SW_EVENT_CLOSE)
@@ -220,7 +220,7 @@ static int zanFactory_finish(zanFactory *factory, swSendData *resp)
 
     swEventData ev_data;
     memset(&ev_data, 0, sizeof(ev_data));
-    ev_data.info.fd   = fd;
+    ev_data.info.fd   = session_id;
     ev_data.info.type = resp->info.type;
 
     ////TODO:::
@@ -263,7 +263,7 @@ static int zanFactory_finish(zanFactory *factory, swSendData *resp)
     sendn = ev_data.info.len + sizeof(resp->info);
     zanTrace("[Worker] send: sendn=%d|type=%d|content=%s", sendn, resp->info.type, resp->data);
 
-    ret = zanWorker_send2reactor(&ev_data, sendn, fd);
+    ret = zanWorker_send2reactor(&ev_data, sendn, session_id);
     if (ret < 0)
     {
         zanError("sendto to reactor failed.");
@@ -290,6 +290,7 @@ static int zanFactory_end(zanFactory *factory, int fd)
     zanDebug("for test, todo.........");
     return ZAN_OK;
 
+#if 0
     //1. get and verify connection, then close the conn
     swConnection *conn = swWorker_get_connection(serv, fd);
     if (conn == NULL || conn->active == 0)
@@ -326,4 +327,5 @@ static int zanFactory_end(zanFactory *factory, int fd)
         conn->closed = 1;
         return factory->finish(factory, &_send);
     }
+#endif
 }
