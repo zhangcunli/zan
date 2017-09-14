@@ -16,15 +16,19 @@
   +----------------------------------------------------------------------+
 */
 
+#include <sys/resource.h>
+
 #include "swoole.h"
 #include "swSignal.h"
 #include "swError.h"
 #include "swAtomic.h"
 #include "swClient.h"
 #include "swBaseOperator.h"
-#include <sys/resource.h>
+#include "swGlobalVars.h"
+#include "swLog.h"
 
 #include "zanGlobalVar.h"
+#include "zanLog.h"
 
 void swoole_init(void)
 {
@@ -172,7 +176,6 @@ void set_log_level(int level)
     SwooleGS->log_lock.unlock(&SwooleGS->log_lock);
 }
 
-///TODO::: 待补充
 void zan_init(void)
 {
     if (ServerG.running)
@@ -277,7 +280,7 @@ void zan_update_time(void)
     time_t now = time(NULL);
     if (now < 0)
     {
-        swSysError("get time failed, errno=%d:%s", errno, strerror(errno));
+        zanError("get time failed, errno=%d:%s", errno, strerror(errno));
     }
     else
     {
@@ -292,7 +295,7 @@ double get_microtime(void)
     return (double) t.tv_sec + ((double) t.tv_usec / 1000000);
 }
 
-void zan_set_loglevel(int level)
+void zan_set_loglevel(uint8_t level)
 {
     if (!ServerGS)
     {
@@ -300,13 +303,11 @@ void zan_set_loglevel(int level)
         return ;
     }
 
-    if (level < SW_LOG_DEBUG || level > SW_LOG_FATAL_ERROR)
+    if (level < ZAN_LOG_DEBUG || level > ZAN_LOG_FATAL_ERROR)
     {
         printf("set_log_level, log_level=%d", level);
         return ;
     }
     ServerGS->log_level = level;
 }
-
-
 

@@ -25,6 +25,7 @@
 #include "swBaseData.h"
 #include "swBaseOperator.h"
 #include "swDNS.h"
+#include "swLog.h"
 
 #include "ext/standard/file.h"
 
@@ -67,7 +68,7 @@ static void swoole_aio_file_complete(swAio_event *event TSRMLS_DC);
 
 static sw_inline void swoole_aio_free(void *ptr)
 {
-	swoole_efree(ptr);
+    swoole_efree(ptr);
 }
 
 static sw_inline void* swoole_aio_malloc(size_t __size)
@@ -77,50 +78,50 @@ static sw_inline void* swoole_aio_malloc(size_t __size)
 
 static int swoole_gethost_from_cache(zval* domain,zval* callback TSRMLS_DC)
 {
-	if (SwooleG.disable_dns_cache)
-	{
-		return SW_ERR;
-	}
+    if (SwooleG.disable_dns_cache)
+    {
+        return SW_ERR;
+    }
 
-	int flags = AF_INET | SW_DNS_LOOKUP_CACHE_ONLY;
-	flags |= (SwooleG.dns_lookup_random)? SW_DNS_LOOKUP_RANDOM:0;
-	char ipaddr[SW_IP_MAX_LENGTH] = {0};
-	if (swoole_gethostbyname(flags, Z_STRVAL_P(domain),ipaddr,SW_IP_MAX_LENGTH) < 0)
-	{
-		return SW_ERR;
-	}
+    int flags = AF_INET | SW_DNS_LOOKUP_CACHE_ONLY;
+    flags |= (SwooleG.dns_lookup_random)? SW_DNS_LOOKUP_RANDOM:0;
+    char ipaddr[SW_IP_MAX_LENGTH] = {0};
+    if (swoole_gethostbyname(flags, Z_STRVAL_P(domain),ipaddr,SW_IP_MAX_LENGTH) < 0)
+    {
+        return SW_ERR;
+    }
 
-	zval *zcontent = NULL;
-	SW_MAKE_STD_ZVAL(zcontent);
-	SW_ZVAL_STRING(zcontent,ipaddr, 1);
+    zval *zcontent = NULL;
+    SW_MAKE_STD_ZVAL(zcontent);
+    SW_ZVAL_STRING(zcontent,ipaddr, 1);
 
-	zval *zdomain = NULL;
-	SW_MAKE_STD_ZVAL(zdomain);
-	SW_ZVAL_STRINGL(zdomain, Z_STRVAL_P(domain), Z_STRLEN_P(domain), 1);
+    zval *zdomain = NULL;
+    SW_MAKE_STD_ZVAL(zdomain);
+    SW_ZVAL_STRINGL(zdomain, Z_STRVAL_P(domain), Z_STRLEN_P(domain), 1);
 
-	zval **args[2];
-	args[0] = &zdomain;
-	args[1] = &zcontent;
+    zval **args[2];
+    args[0] = &zdomain;
+    args[1] = &zcontent;
 
-	zval *retval = NULL;
-	if (sw_call_user_function_ex(EG(function_table), NULL, callback, &retval, 2, args, 0, NULL TSRMLS_CC) == FAILURE)
-	{
-		swWarn("swoole_async: onAsyncComplete handler error");
-	}
+    zval *retval = NULL;
+    if (sw_call_user_function_ex(EG(function_table), NULL, callback, &retval, 2, args, 0, NULL TSRMLS_CC) == FAILURE)
+    {
+        swWarn("swoole_async: onAsyncComplete handler error");
+    }
 
-	if (EG(exception))
-	{
-		zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
-	}
+    if (EG(exception))
+    {
+        zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
+    }
 
-	if (retval)
-	{
-		sw_zval_ptr_dtor(&retval);
-	}
+    if (retval)
+    {
+        sw_zval_ptr_dtor(&retval);
+    }
 
-	sw_zval_ptr_dtor(&zdomain);
-	sw_zval_ptr_dtor(&zcontent);
-	return SW_OK;
+    sw_zval_ptr_dtor(&zdomain);
+    sw_zval_ptr_dtor(&zcontent);
+    return SW_OK;
 }
 
 static void php_swoole_check_aio()
@@ -148,7 +149,7 @@ static void php_swoole_file_request_free(void *data)
     if (file_req->filename)
     {
         sw_zval_ptr_dtor(&file_req->filename);
-    	file_req->filename = NULL;
+        file_req->filename = NULL;
     }
 
     swoole_efree(file_req);
@@ -160,211 +161,211 @@ static void php_swoole_aio_onComplete(swAio_event *event)
 
     if (event->type == SW_AIO_DNS_LOOKUP)
     {
-    	swoole_aio_dns_complete(event TSRMLS_CC);
+        swoole_aio_dns_complete(event TSRMLS_CC);
     }
     else if (event->type == SW_AIO_READ || event->type == SW_AIO_WRITE)
     {
-    	swoole_aio_file_complete(event TSRMLS_CC);
+        swoole_aio_file_complete(event TSRMLS_CC);
     }
     else
-	{
-		swWarn("swoole_async: onAsyncComplete unknown event type[%d].", event->type);
-		return;
-	}
+    {
+        swWarn("swoole_async: onAsyncComplete unknown event type[%d].", event->type);
+        return;
+    }
 }
 
 static void swoole_aio_dns_complete(swAio_event *event TSRMLS_DC)
 {
-	dns_request *dns_req = (dns_request *) event->req;
-	if (!dns_req || !dns_req->callback)
-	{
-		swWarn("swoole_async: dns complete callback not found[0]");
-		return;
-	}
+    dns_request *dns_req = (dns_request *) event->req;
+    if (!dns_req || !dns_req->callback)
+    {
+        swWarn("swoole_async: dns complete callback not found[0]");
+        return;
+    }
 
-	zval *zcallback =  dns_req->callback;
+    zval *zcallback =  dns_req->callback;
 
-	int64_t ret = event->ret;
-	if (ret < 0)
-	{
-		swWarn("swoole_async: file aio Error: %s[%d]", strerror(event->error), event->error);
-	}
+    int64_t ret = event->ret;
+    if (ret < 0)
+    {
+        swWarn("swoole_async: file aio Error: %s[%d]", strerror(event->error), event->error);
+    }
 
-	zval*  zcontent = NULL;
-	SW_MAKE_STD_ZVAL(zcontent);
-	const char* content = (const char*)((ret < 0)? "":event->buf);
-	SW_ZVAL_STRING(zcontent, content, 1);
+    zval*  zcontent = NULL;
+    SW_MAKE_STD_ZVAL(zcontent);
+    const char* content = (const char*)((ret < 0)? "":event->buf);
+    SW_ZVAL_STRING(zcontent, content, 1);
 
-	zval** args[2];
-	args[0] = &dns_req->domain;
-	args[1] = &zcontent;
+    zval** args[2];
+    args[0] = &dns_req->domain;
+    args[1] = &zcontent;
 
-	zval *retval = NULL;
-	if (sw_call_user_function_ex(EG(function_table), NULL, zcallback, &retval,
-															2, args, 0, NULL TSRMLS_CC) == FAILURE)
-	{
-		swWarn("swoole_async: file aio handler error");
-	}
+    zval *retval = NULL;
+    if (sw_call_user_function_ex(EG(function_table), NULL, zcallback, &retval,
+                                                            2, args, 0, NULL TSRMLS_CC) == FAILURE)
+    {
+        swWarn("swoole_async: file aio handler error");
+    }
 
-	if (EG(exception))
-	{
-		zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
-	}
+    if (EG(exception))
+    {
+        zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
+    }
 
-	if (dns_req->callback)
-	{
-	    sw_zval_ptr_dtor(&dns_req->callback);
-		dns_req->callback = NULL;
-	}
+    if (dns_req->callback)
+    {
+        sw_zval_ptr_dtor(&dns_req->callback);
+        dns_req->callback = NULL;
+    }
 
-	if (dns_req->domain)
-	{
-	    sw_zval_ptr_dtor(&dns_req->domain);
-		dns_req->domain = NULL;
-	}
+    if (dns_req->domain)
+    {
+        sw_zval_ptr_dtor(&dns_req->domain);
+        dns_req->domain = NULL;
+    }
 
-	swoole_efree(dns_req);
-	event->req = NULL;
-	swoole_efree(event->buf);
+    swoole_efree(dns_req);
+    event->req = NULL;
+    swoole_efree(event->buf);
 
-	if (zcontent)
-	{
-		sw_zval_ptr_dtor(&zcontent);
-	}
+    if (zcontent)
+    {
+        sw_zval_ptr_dtor(&zcontent);
+    }
 
-	if (retval)
-	{
-		sw_zval_ptr_dtor(&retval);
-	}
+    if (retval)
+    {
+        sw_zval_ptr_dtor(&retval);
+    }
 }
 
 static void swoole_aio_file_complete(swAio_event *event TSRMLS_DC)
 {
-	file_request *file_req = swHashMap_find_int(php_swoole_aio_request, event->task_id);
-	if (!file_req || (!file_req->callback && file_req->type == SW_AIO_READ))
-	{
-		swWarn("swoole_async: file complete callback not found");
-		return;
-	}
+    file_request *file_req = swHashMap_find_int(php_swoole_aio_request, event->task_id);
+    if (!file_req || (!file_req->callback && file_req->type == SW_AIO_READ))
+    {
+        swWarn("swoole_async: file complete callback not found");
+        return;
+    }
 
-	int isEOF = SW_FALSE;
-	int64_t ret = event->ret;
-	if (ret < 0)
-	{
-		SwooleG.error = event->error;
-		swoole_php_error(E_WARNING, "Aio Error: %s[%d]", strerror(event->error), event->error);
-	}
-	else if (0 == ret)
-	{
-		bzero(event->buf, event->nbytes);
-		isEOF = SW_TRUE;
-	}
-	else if (event->type == SW_AIO_WRITE)
-	{
-		file_req->offset += ret;
-		event->buf += ret;
-		event->nbytes -= ret;
-		file_req->length = (file_req->length <= ret)? 0:file_req->length - ret;
-		isEOF = file_req->length > 0 ? 0: 1;
-	}
-	else if (file_req->once == 1 && ret < file_req->length)
-	{
-		swWarn("swoole_async: ret_length[%d] < req->length[%d].", (int ) ret, file_req->length);
-	}
-	else if (event->type == SW_AIO_READ)
-	{
-		file_req->offset += ret;
-		file_req->length = (file_req->length <= ret)? 0:file_req->length - ret;
-	}
+    int isEOF = SW_FALSE;
+    int64_t ret = event->ret;
+    if (ret < 0)
+    {
+        SwooleG.error = event->error;
+        swoole_php_error(E_WARNING, "Aio Error: %s[%d]", strerror(event->error), event->error);
+    }
+    else if (0 == ret)
+    {
+        bzero(event->buf, event->nbytes);
+        isEOF = SW_TRUE;
+    }
+    else if (event->type == SW_AIO_WRITE)
+    {
+        file_req->offset += ret;
+        event->buf += ret;
+        event->nbytes -= ret;
+        file_req->length = (file_req->length <= ret)? 0:file_req->length - ret;
+        isEOF = file_req->length > 0 ? 0: 1;
+    }
+    else if (file_req->once == 1 && ret < file_req->length)
+    {
+        swWarn("swoole_async: ret_length[%d] < req->length[%d].", (int ) ret, file_req->length);
+    }
+    else if (event->type == SW_AIO_READ)
+    {
+        file_req->offset += ret;
+        file_req->length = (file_req->length <= ret)? 0:file_req->length - ret;
+    }
 
-	zval **args[2];
-	zval *zcontent = NULL;
-	SW_MAKE_STD_ZVAL(zcontent);
-	if (event->type == SW_AIO_READ)
-	{
-		memset(event->buf + ret, 0, 1);
-		SW_ZVAL_STRINGL(zcontent, event->buf, ret, 1);
-	}
-	else if (event->type == SW_AIO_WRITE)
-	{
-		ZVAL_LONG(zcontent, ret);
-	}
+    zval **args[2];
+    zval *zcontent = NULL;
+    SW_MAKE_STD_ZVAL(zcontent);
+    if (event->type == SW_AIO_READ)
+    {
+        memset(event->buf + ret, 0, 1);
+        SW_ZVAL_STRINGL(zcontent, event->buf, ret, 1);
+    }
+    else if (event->type == SW_AIO_WRITE)
+    {
+        ZVAL_LONG(zcontent, ret);
+    }
 
-	args[0] = &file_req->filename;
-	args[1] = &zcontent;
+    args[0] = &file_req->filename;
+    args[1] = &zcontent;
 
-	zval *zcallback = file_req->callback;
-	zval *retval = NULL;
-	if (zcallback && sw_call_user_function_ex(EG(function_table), NULL, zcallback, &retval,
-															2, args, 0, NULL TSRMLS_CC) == FAILURE)
-	{
-		swWarn("swoole_async: file aio handler error");
-		goto close_file;
-	}
+    zval *zcallback = file_req->callback;
+    zval *retval = NULL;
+    if (zcallback && sw_call_user_function_ex(EG(function_table), NULL, zcallback, &retval,
+                                                            2, args, 0, NULL TSRMLS_CC) == FAILURE)
+    {
+        swWarn("swoole_async: file aio handler error");
+        goto close_file;
+    }
 
-	if (file_req->once)
-	{
+    if (file_req->once)
+    {
 close_file:
-		close(event->fd);
-		swHashMap_del_int(php_swoole_aio_request, event->task_id);
-	}
-	else if(file_req->type == SW_AIO_WRITE)
-	{
-		if ((retval && !ZVAL_IS_NULL(retval) && !Z_BVAL_P(retval)) || isEOF)
-		{
-			swHashMap_del(php_swoole_open_files, Z_STRVAL_P(file_req->filename), Z_STRLEN_P(file_req->filename));
-			goto close_file;
-		}
-		else
-		{
-			event->nbytes = file_req->length;
-			int taskId = SwooleAIO.write(event->fd, event->buf, event->nbytes, file_req->offset);
-			if (taskId < 0)
-			{
-				swWarn("swoole_async: continue to read failed. Error: %s[%d]", strerror(event->error), event->error);
-				goto close_file;
-			}
-			else
-			{
-				swHashMap_move_int(php_swoole_aio_request, event->task_id, taskId);
-			}
-		}
-	}
-	else
-	{
-		if ((retval && !ZVAL_IS_NULL(retval) && !Z_BVAL_P(retval)) || isEOF)
-		{
-			goto close_file;
-		}
+        close(event->fd);
+        swHashMap_del_int(php_swoole_aio_request, event->task_id);
+    }
+    else if(file_req->type == SW_AIO_WRITE)
+    {
+        if ((retval && !ZVAL_IS_NULL(retval) && !Z_BVAL_P(retval)) || isEOF)
+        {
+            swHashMap_del(php_swoole_open_files, Z_STRVAL_P(file_req->filename), Z_STRLEN_P(file_req->filename));
+            goto close_file;
+        }
+        else
+        {
+            event->nbytes = file_req->length;
+            int taskId = SwooleAIO.write(event->fd, event->buf, event->nbytes, file_req->offset);
+            if (taskId < 0)
+            {
+                swWarn("swoole_async: continue to read failed. Error: %s[%d]", strerror(event->error), event->error);
+                goto close_file;
+            }
+            else
+            {
+                swHashMap_move_int(php_swoole_aio_request, event->task_id, taskId);
+            }
+        }
+    }
+    else
+    {
+        if ((retval && !ZVAL_IS_NULL(retval) && !Z_BVAL_P(retval)) || isEOF)
+        {
+            goto close_file;
+        }
 
-		//continue to read
-		event->nbytes = event->nbytes < file_req->length? event->nbytes:file_req->length;
-		int ret = SwooleAIO.read(event->fd, event->buf, event->nbytes, file_req->offset);
-		if (ret < 0)
-		{
-			swWarn("swoole_async: continue to read failed. Error: %s[%d]", strerror(event->error), event->error);
-			goto close_file;
-		}
-		else
-		{
-			swHashMap_move_int(php_swoole_aio_request, event->task_id, ret);
-		}
-	}
+        //continue to read
+        event->nbytes = event->nbytes < file_req->length? event->nbytes:file_req->length;
+        int ret = SwooleAIO.read(event->fd, event->buf, event->nbytes, file_req->offset);
+        if (ret < 0)
+        {
+            swWarn("swoole_async: continue to read failed. Error: %s[%d]", strerror(event->error), event->error);
+            goto close_file;
+        }
+        else
+        {
+            swHashMap_move_int(php_swoole_aio_request, event->task_id, ret);
+        }
+    }
 
-	if (EG(exception))
-	{
-		zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
-	}
+    if (EG(exception))
+    {
+        zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
+    }
 
-	if (zcontent)
-	{
-		sw_zval_ptr_dtor(&zcontent);
-	}
+    if (zcontent)
+    {
+        sw_zval_ptr_dtor(&zcontent);
+    }
 
-	if (retval)
-	{
-		sw_zval_ptr_dtor(&retval);
-	}
+    if (retval)
+    {
+        sw_zval_ptr_dtor(&retval);
+    }
 }
 
 void swoole_aio_init(int module_number TSRMLS_DC)
@@ -391,170 +392,170 @@ void swoole_aio_init(int module_number TSRMLS_DC)
 
 PHP_FUNCTION(swoole_async_read)
 {
-	zval *callback = NULL;
-	zval *filename = NULL;
-	long buf_size = -1;
-	long offset = 0;
+    zval *callback = NULL;
+    zval *filename = NULL;
+    long buf_size = -1;
+    long offset = 0;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|ll", &filename, &callback, &buf_size, &offset))
-	{
-		return;
-	}
+    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|ll", &filename, &callback, &buf_size, &offset))
+    {
+        return;
+    }
 
-	if (offset < 0)
-	{
-		swoole_php_fatal_error(E_WARNING, "offset must be greater than 0.");
-		RETURN_FALSE;
-	}
+    if (offset < 0)
+    {
+        swoole_php_fatal_error(E_WARNING, "offset must be greater than 0.");
+        RETURN_FALSE;
+    }
 
-	if (swoole_check_callable(callback TSRMLS_CC) < 0)
-	{
-		swoole_php_fatal_error(E_WARNING,"user must set callback.");
-		RETURN_FALSE;
-	}
+    if (swoole_check_callable(callback TSRMLS_CC) < 0)
+    {
+        swoole_php_fatal_error(E_WARNING,"user must set callback.");
+        RETURN_FALSE;
+    }
 
-	convert_to_string(filename);
-	int open_flag = O_RDONLY;
-//	open_flag |= (SwooleAIO.mode == SW_AIO_LINUX)? O_DIRECT:0;
-	int fd = open(Z_STRVAL_P(filename), open_flag, 0644);
-	if (fd < 0)
-	{
-		swoole_php_sys_error(E_WARNING, "open(%s, O_RDONLY) failed.", Z_STRVAL_P(filename));
-		RETURN_FALSE;
-	}
+    convert_to_string(filename);
+    int open_flag = O_RDONLY;
+//  open_flag |= (SwooleAIO.mode == SW_AIO_LINUX)? O_DIRECT:0;
+    int fd = open(Z_STRVAL_P(filename), open_flag, 0644);
+    if (fd < 0)
+    {
+        swoole_php_sys_error(E_WARNING, "open(%s, O_RDONLY) failed.", Z_STRVAL_P(filename));
+        RETURN_FALSE;
+    }
 
-	size_t filelen = get_filelen(fd);
-	if (filelen <= 0 || offset >= filelen)
-	{
-		swoole_php_fatal_error(E_WARNING, "offset must be less than file_size[=%ld].", filelen);
+    size_t filelen = get_filelen(fd);
+    if (filelen <= 0 || offset >= filelen)
+    {
+        swoole_php_fatal_error(E_WARNING, "offset must be less than file_size[=%ld].", filelen);
 create_error:
-		close(fd);
-		RETURN_FALSE;
-	}
+        close(fd);
+        RETURN_FALSE;
+    }
 
-	/// 限制一次读取buf_size 的长度
-	///[1] buf_size < 0 读取全部文件.
-	buf_size = (buf_size < 0)? filelen:buf_size;
-	///[2] buf_size + offset > filelen 则只读取filelen － offset的长度
-	buf_size = (buf_size + offset > filelen)? filelen - offset:buf_size;
-	int read_size = (buf_size > SW_FILE_MAX_LEN_ONCE)? SW_FILE_MAX_LEN_ONCE:buf_size;
-	void *fcnt = swoole_aio_malloc(read_size + 1);
-	if (!fcnt)
-	{
-		swoole_php_sys_error(E_WARNING, "malloc failed.");
-		goto create_error;
-	}
+    /// 限制一次读取buf_size 的长度
+    ///[1] buf_size < 0 读取全部文件.
+    buf_size = (buf_size < 0)? filelen:buf_size;
+    ///[2] buf_size + offset > filelen 则只读取filelen － offset的长度
+    buf_size = (buf_size + offset > filelen)? filelen - offset:buf_size;
+    int read_size = (buf_size > SW_FILE_MAX_LEN_ONCE)? SW_FILE_MAX_LEN_ONCE:buf_size;
+    void *fcnt = swoole_aio_malloc(read_size + 1);
+    if (!fcnt)
+    {
+        swoole_php_sys_error(E_WARNING, "malloc failed.");
+        goto create_error;
+    }
 
-	file_request *req = emalloc(sizeof(file_request));
-	req->fd = fd;
-	req->content = fcnt;
-	req->once = 0;
-	req->type = SW_AIO_READ;
-	req->length = buf_size;
-	req->offset = offset;
+    file_request *req = emalloc(sizeof(file_request));
+    req->fd = fd;
+    req->content = fcnt;
+    req->once = 0;
+    req->type = SW_AIO_READ;
+    req->length = buf_size;
+    req->offset = offset;
 
-	php_swoole_check_aio();
+    php_swoole_check_aio();
 
-	int ret = SwooleAIO.read(fd, fcnt, read_size, offset);
-	if (ret < 0)
-	{
-		RETURN_FALSE;
-	}
+    int ret = SwooleAIO.read(fd, fcnt, read_size, offset);
+    if (ret < 0)
+    {
+        RETURN_FALSE;
+    }
 
-	req->filename = filename;
-	sw_zval_add_ref(&filename);
-	sw_copy_to_stack(req->filename, req->_filename);
+    req->filename = filename;
+    sw_zval_add_ref(&filename);
+    sw_copy_to_stack(req->filename, req->_filename);
 
-	if (callback && !ZVAL_IS_NULL(callback))
-	{
-		req->callback = callback;
-		sw_zval_add_ref(&callback);
-		sw_copy_to_stack(req->callback, req->_callback);
-	}else
-		req->callback = NULL;
+    if (callback && !ZVAL_IS_NULL(callback))
+    {
+        req->callback = callback;
+        sw_zval_add_ref(&callback);
+        sw_copy_to_stack(req->callback, req->_callback);
+    }else
+        req->callback = NULL;
 
-	swHashMap_add_int(php_swoole_aio_request, ret, req);
-	RETURN_TRUE;
+    swHashMap_add_int(php_swoole_aio_request, ret, req);
+    RETURN_TRUE;
 }
 
 PHP_FUNCTION(swoole_async_write)
 {
-	zval *callback = NULL;
-	zval *filename = NULL;
-	char *fcnt = NULL;
-	zend_size_t fcnt_len = 0;
-	off_t offset = -1;
+    zval *callback = NULL;
+    zval *filename = NULL;
+    char *fcnt = NULL;
+    zend_size_t fcnt_len = 0;
+    off_t offset = -1;
 
-	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zs|lz", &filename, &fcnt, &fcnt_len, &offset, &callback))
-	{
-		return;
-	}
+    if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zs|lz", &filename, &fcnt, &fcnt_len, &offset, &callback))
+    {
+        return;
+    }
 
-	uint32_t maxBuflen = SwooleAIO.buf_max_len > 0? SwooleAIO.buf_max_len:SW_FILE_MAX_LEN_ONCE;
-	if (fcnt_len <= 0 || fcnt_len > maxBuflen || !fcnt)
-	{
-		swWarn("user set data buffer must between 0~%d, and user buffer can not be null",maxBuflen);
-		RETURN_FALSE;
-	}
+    uint32_t maxBuflen = SwooleAIO.buf_max_len > 0? SwooleAIO.buf_max_len:SW_FILE_MAX_LEN_ONCE;
+    if (fcnt_len <= 0 || fcnt_len > maxBuflen || !fcnt)
+    {
+        swWarn("user set data buffer must between 0~%d, and user buffer can not be null",maxBuflen);
+        RETURN_FALSE;
+    }
 
-	if (callback && !ZVAL_IS_NULL(callback) && swoole_check_callable(callback TSRMLS_CC) < 0)
-	{
-		RETURN_FALSE;
-	}
+    if (callback && !ZVAL_IS_NULL(callback) && swoole_check_callable(callback TSRMLS_CC) < 0)
+    {
+        RETURN_FALSE;
+    }
 
-	convert_to_string(filename);
+    convert_to_string(filename);
 
-	long fd = -1;
-	int open_flag = O_WRONLY | O_CREAT;
-//	open_flag |= (SwooleAIO.mode == SW_AIO_LINUX)? O_DIRECT:0;
-	open_flag |= (offset < 0)? O_APPEND:0;
+    long fd = -1;
+    int open_flag = O_WRONLY | O_CREAT;
+//  open_flag |= (SwooleAIO.mode == SW_AIO_LINUX)? O_DIRECT:0;
+    open_flag |= (offset < 0)? O_APPEND:0;
 
-	fd = open(Z_STRVAL_P(filename), open_flag, 0644);
-	if (fd < 0)
-	{
-		swoole_php_fatal_error(E_WARNING, "open(%s, %d) failed. Error: %s[%d]", Z_STRVAL_P(filename), open_flag, strerror(errno), errno);
-		RETURN_FALSE;
-	}
+    fd = open(Z_STRVAL_P(filename), open_flag, 0644);
+    if (fd < 0)
+    {
+        swoole_php_fatal_error(E_WARNING, "open(%s, %d) failed. Error: %s[%d]", Z_STRVAL_P(filename), open_flag, strerror(errno), errno);
+        RETURN_FALSE;
+    }
 
-	offset = (offset < 0)? 0:offset;
+    offset = (offset < 0)? 0:offset;
 
-	file_request *req = emalloc(sizeof(file_request));
-	char *wt_cnt = swoole_aio_malloc(fcnt_len + 1);
-	req->fd = fd;
-	req->content = wt_cnt;
-	req->once = 0;
-	req->type = SW_AIO_WRITE;
-	req->length = fcnt_len;
-	req->offset = offset;
+    file_request *req = emalloc(sizeof(file_request));
+    char *wt_cnt = swoole_aio_malloc(fcnt_len + 1);
+    req->fd = fd;
+    req->content = wt_cnt;
+    req->once = 0;
+    req->type = SW_AIO_WRITE;
+    req->length = fcnt_len;
+    req->offset = offset;
 
-	memcpy(wt_cnt, fcnt, fcnt_len);
-	php_swoole_check_aio();
+    memcpy(wt_cnt, fcnt, fcnt_len);
+    php_swoole_check_aio();
 
-	int ret = SwooleAIO.write(fd, wt_cnt, fcnt_len, offset);
-	if (ret < 0)
-	{
+    int ret = SwooleAIO.write(fd, wt_cnt, fcnt_len, offset);
+    if (ret < 0)
+    {
 
-		close(fd);
-		swoole_aio_free(wt_cnt);
-		swoole_efree(req);
-		RETURN_FALSE;
-	}
+        close(fd);
+        swoole_aio_free(wt_cnt);
+        swoole_efree(req);
+        RETURN_FALSE;
+    }
 
-	req->filename = filename;
-	sw_zval_add_ref(&filename);
-	sw_copy_to_stack(req->filename, req->_filename);
+    req->filename = filename;
+    sw_zval_add_ref(&filename);
+    sw_copy_to_stack(req->filename, req->_filename);
 
-	if (swoole_check_callable(callback TSRMLS_CC) >= 0)
-	{
-		req->callback = callback;
-		sw_zval_add_ref(&callback);
-		sw_copy_to_stack(req->callback, req->_callback);
-	}
-	else
-		req->callback = NULL;
+    if (swoole_check_callable(callback TSRMLS_CC) >= 0)
+    {
+        req->callback = callback;
+        sw_zval_add_ref(&callback);
+        sw_copy_to_stack(req->callback, req->_callback);
+    }
+    else
+        req->callback = NULL;
 
-	swHashMap_add_int(php_swoole_aio_request, ret, req);
-	RETURN_TRUE;
+    swHashMap_add_int(php_swoole_aio_request, ret, req);
+    RETURN_TRUE;
 }
 
 PHP_FUNCTION(swoole_async_set)
@@ -607,8 +608,8 @@ PHP_FUNCTION(swoole_async_set)
     value = NULL;
     if (php_swoole_array_get_value(vht,"aio_max_buffer",value))
     {
-    	convert_to_long(value);
-    	SwooleAIO.buf_max_len = Z_LVAL_P(value);
+        convert_to_long(value);
+        SwooleAIO.buf_max_len = Z_LVAL_P(value);
     }
 
     value = NULL;
@@ -642,7 +643,7 @@ PHP_FUNCTION(swoole_async_set)
 
 PHP_FUNCTION(swoole_async_dns_lookup)
 {
-	zval *domain = NULL;
+    zval *domain = NULL;
     zval *callback = NULL;
     if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &domain, &callback))
     {
@@ -657,8 +658,8 @@ PHP_FUNCTION(swoole_async_dns_lookup)
 
     if (swoole_check_callable(callback TSRMLS_CC) < 0)
     {
-    	swWarn("async dns lookup callback error.");
-    	RETURN_FALSE;
+        swWarn("async dns lookup callback error.");
+        RETURN_FALSE;
     }
 
     /// 从缓存中获取到，立即返回

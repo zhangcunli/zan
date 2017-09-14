@@ -20,6 +20,8 @@
 #include "swFactory.h"
 #include "swServer.h"
 #include "swExecutor.h"
+#include "swGlobalVars.h"
+#include "swLog.h"
 
 static int swFactory_start(swFactory *factory);
 static int swFactory_dispatch(swFactory *factory, swDispatchData *task);
@@ -42,13 +44,13 @@ int swFactory_notify(swFactory *factory, swDataHead *info)
     swConnection *conn = swServer_connection_get(serv, info->fd);
     if (conn == NULL || conn->active == 0)
     {
-    	swNotice("dispatch[type=%d] failed, connection#%d is not active.", info->type, info->fd);
+        swNotice("dispatch[type=%d] failed, connection#%d is not active.", info->type, info->fd);
         return SW_ERR;
     }
     //server active close, discard data.
     if (conn->closed)
     {
-    	swNotice("dispatch[type=%d] failed, connection#%d is closed by server.", info->type, info->fd);
+        swNotice("dispatch[type=%d] failed, connection#%d is closed by server.", info->type, info->fd);
         return SW_OK;
     }
     //converted fd to session_id
@@ -71,7 +73,7 @@ int swFactory_end(swFactory *factory, int fd)
     swConnection *conn = swWorker_get_connection(serv, fd);
     if (conn == NULL || conn->active == 0)
     {
-    	swNotice("can not close. Connection[%d] not found.", _send.info.fd);
+        swNotice("can not close. Connection[%d] not found.", _send.info.fd);
         return SW_ERR;
     }
     else if (conn->close_force)
@@ -80,7 +82,7 @@ int swFactory_end(swFactory *factory, int fd)
     }
     else if (conn->closing)
     {
-    	swNotice("The connection[%d] is closing.", fd);
+        swNotice("The connection[%d] is closing.", fd);
         return SW_ERR;
     }
     else if (conn->closed)
@@ -117,7 +119,7 @@ int swFactory_end(swFactory *factory, int fd)
 
 int swFactory_finish(swFactory *factory, swSendData *resp)
 {
-	resp->length += (resp->length == 0)? resp->info.len :0;
+    resp->length += (resp->length == 0)? resp->info.len :0;
 
     if (swReactorThread_send(resp) < 0)
     {
@@ -150,13 +152,13 @@ static int swFactory_dispatch(swFactory *factory, swDispatchData *task)
         swConnection *conn = swServer_connection_get(serv, task->data.info.fd);
         if (conn == NULL || conn->active == 0)
         {
-        	swNotice("dispatch[type=%d] failed, connection#%d is not active.", task->data.info.type, task->data.info.fd);
+            swNotice("dispatch[type=%d] failed, connection#%d is not active.", task->data.info.type, task->data.info.fd);
             return SW_ERR;
         }
         //server active close, discard data.
         if (conn->closed)
         {
-        	swNotice("dispatch[type=%d] failed, connection#%d is closed by server.", task->data.info.type,task->data.info.fd);
+            swNotice("dispatch[type=%d] failed, connection#%d is closed by server.", task->data.info.type,task->data.info.fd);
             return SW_OK;
         }
         //converted fd to session_id
