@@ -157,6 +157,7 @@ int zanNetworker_loop(zanProcessPool *pool, zanWorker *worker)
     ServerG.process_type  = ZAN_PROCESS_NETWORKER;
     ServerWG.worker_id    = worker->worker_id;
 
+    int networker_index = zanServer_get_networker_index(worker->worker_id);
     swReactor *reactor = (swReactor *)zan_malloc(sizeof(swReactor));
     if (swReactor_init(reactor, SW_REACTOR_MAXEVENTS) < 0)
     {
@@ -173,11 +174,11 @@ int zanNetworker_loop(zanProcessPool *pool, zanWorker *worker)
     reactor->thread = 1;                  //
     reactor->id  = worker->worker_id;     //=========networker_id
     reactor->disable_accept = 0;
-    reactor->socket_list = serv->connection_list;
+    reactor->socket_list = serv->connection_list[networker_index];
     reactor->max_socket  = servSet->max_connection;
     reactor->enable_accept = zanReactor_enableAccept;
 
-    zanServer_store_listen_socket(serv);
+    zanServer_store_listen_socket(serv, worker->worker_id);
 
     //listen UDP
 
@@ -349,13 +350,15 @@ static int zanNetworker_onPipeReceive(swReactor *reactor, swEvent *ev)
 static int zanNetworker_onPipeWrite(swReactor *reactor, swEvent *ev)
 {
     int ret = 0;
+    int networker_index = zanServer_get_networker_index(ev->from_id);
 
     swBuffer_trunk *trunk = NULL;
     swEventData *send_data = NULL;
     swConnection *conn = NULL;
-    swServer *serv = reactor->ptr;
-    swBuffer *buffer = serv->connection_list[ev->fd].in_buffer;
-    swLock *lock = serv->connection_list[ev->fd].object;
+
+    zanServer *serv = ServerG.serv;
+    swBuffer *buffer = serv->connection_list[networker_index][ev->fd].in_buffer;
+    swLock *lock = serv->connection_list[networker_index][ev->fd].object;
 
     zanWarn("onPipeWrite in, fd=%d, from_id=%d, type=%d", ev->fd, ev->from_id, ev->type);
 
@@ -371,7 +374,7 @@ static int zanNetworker_onPipeWrite(swReactor *reactor, swEvent *ev)
         if (swEventData_is_stream(send_data->info.type))
         {
             //send_data->info.fd is session_id
-            conn = swServer_connection_verify(serv, send_data->info.fd);
+            conn = zanServer_verify_connection(serv, send_data->info.fd);
             if (conn == NULL || conn->closed)
             {
                 if (conn && conn->closed)
@@ -438,7 +441,7 @@ static int zanNetworker_onRead(swReactor *reactor, swEvent *event)
     }
 
     zanServer *serv = ServerG.serv;
-    swListenPort *port = zanServer_get_port(serv, event->fd);
+    swListenPort *port = zanServer_get_port(serv, event->from_id, event->fd);
 
 #if 0
 #ifdef SW_USE_OPENSSL
@@ -457,9 +460,10 @@ static int zanNetworker_onWrite(swReactor *reactor, swEvent *event)
 {
     int ret;
     int fd = event->fd;
+    int networker_id = event->from_id;
     zanServer *serv = ServerG.serv;
 
-    swConnection *conn = zanServer_get_connection(serv, fd);
+    swConnection *conn = zanServer_get_connection(serv, networker_id, fd);
     if (conn->active == 0)
     {
         zanWarn("conn->active == 0, fd=%d", fd);
@@ -541,16 +545,17 @@ close_fd:
 int zanNetworker_onClose(swReactor *reactor, swEvent *event)
 {
     zanServer *serv = ServerG.serv;
+    swDataHead notify_ev;
 
     int fd = event->fd;
-    swDataHead notify_ev;
-    bzero(&notify_ev, sizeof(notify_ev));
+    int networker_id = event->from_id;
 
+    bzero(&notify_ev, sizeof(notify_ev));
     notify_ev.from_id = reactor->id;
     notify_ev.fd = fd;
     notify_ev.type = SW_EVENT_CLOSE;
 
-    swConnection *conn = zanServer_get_connection(ServerG.serv, fd);
+    swConnection *conn = zanServer_get_connection(ServerG.serv, networker_id, fd);
     if (conn == NULL || conn->active == 0)
     {
         zanWarn("conn==null or conn->active==0, conn=%p", conn);
@@ -713,12 +718,11 @@ int zanNetworker_send(swSendData *_send)
 int zanNetworker_send2worker(void *data, int len, uint16_t target_worker_id)
 {
     int ret = -1;
-    zanServer *serv   = ServerG.serv;
-    zanWorker *worker = zanServer_get_worker(serv, target_worker_id);
-
+    zanServer *serv    = ServerG.serv;
     swReactor *reactor = ServerG.main_reactor;
+    zanWorker *worker  = zanServer_get_worker(serv, target_worker_id);
 
-    zanDebug("send2worker in: worker_id=%d", target_worker_id);
+    int networker_index = zanServer_get_networker_index(ServerWG.worker_id);
 
     if (serv->have_tcp_sock)
     {
@@ -731,7 +735,7 @@ int zanNetworker_send2worker(void *data, int len, uint16_t target_worker_id)
         //lock thread
         //lock->lock(lock);
 
-        swBuffer *buffer = serv->connection_list[pipe_fd].in_buffer;
+        swBuffer *buffer = serv->connection_list[networker_index][pipe_fd].in_buffer;
         if (swBuffer_empty(buffer))
         {
             ret = write(pipe_fd, (void *) data, len);
@@ -787,11 +791,14 @@ append_pipe_buffer:
  */
 int zanNetworker_close_connection(swReactor *reactor, int fd)
 {
+    int networker_id = ServerWG.worker_id;
+    int network_index = zanServer_get_networker_index(networker_id);
     zanServer *serv = ServerG.serv;
-    swConnection *conn = zanServer_get_connection(serv, fd);
+
+    swConnection *conn = zanServer_get_connection(serv, networker_id, fd);
     if (conn == NULL)
     {
-        zanWarn("[Reactor]connection not found. fd=%d|max_fd=%d", fd, swServer_get_maxfd(serv));
+        zanWarn("[Reactor]connection not found. fd=%d|networker_id=%d|maxfd=%d", fd, networker_id, zanServer_get_maxfd(serv, network_index));
         return ZAN_ERR;
     }
 
@@ -806,14 +813,14 @@ int zanNetworker_close_connection(swReactor *reactor, int fd)
 
     zanTrace("Close Event.fd=%d|from=%d", fd, reactor->id);
 
-    swListenPort *port = zanServer_get_port(serv, fd);
+    swListenPort *port = zanServer_get_port(serv, networker_id, fd);
 
     //clear output buffer
     if (port->open_eof_check || port->open_length_check || port->open_mqtt_protocol)
     {
         if (conn->object)
         {
-            zanServer_free_buffer(serv, fd);
+            zanServer_free_connection_buffer(serv, networker_id, fd);
             conn->object = NULL;
         }
     }
@@ -823,7 +830,7 @@ int zanNetworker_close_connection(swReactor *reactor, int fd)
         {
             if (conn->http_upgrade)
             {
-                zanServer_free_buffer(serv, fd);
+                zanServer_free_connection_buffer(serv, networker_id, fd);
                 conn->websocket_status = 0;
             }
             else
@@ -834,21 +841,22 @@ int zanNetworker_close_connection(swReactor *reactor, int fd)
     }
 
 #ifdef SW_REACTOR_USE_SESSION
-    swSession *session = zanServer_get_session(serv, conn->session_id);
-    session->fd = 0;
+    zanSession *session = zanServer_get_session(serv, conn->session_id);
+    session->accept_fd = 0;
 #endif
 
     //reset maxfd, for connection_list
-    if (fd == swServer_get_maxfd(serv))
+    if (fd == zanServer_get_maxfd(serv, network_index))
     {
         ServerGS->lock.lock(&ServerGS->lock);
         int find_max_fd = fd - 1;
         zanTrace("set_maxfd=%d|close_fd=%d\n", find_max_fd, fd);
 
         //Find the new max_fd
-        for (; serv->connection_list[find_max_fd].active == 0 && find_max_fd > swServer_get_minfd(serv); find_max_fd--)
+        //for (; serv->connection_list[find_max_fd].active == 0 && find_max_fd > swServer_get_minfd(serv); find_max_fd--)
+        for (; serv->connection_list[network_index][find_max_fd].active == 0 && find_max_fd > zanServer_get_minfd(serv, network_index); find_max_fd--)
             ;
-        swServer_set_maxfd(serv, find_max_fd);
+        zanServer_set_maxfd(serv, network_index, find_max_fd);
         ServerGS->lock.unlock(&ServerGS->lock);
     }
 

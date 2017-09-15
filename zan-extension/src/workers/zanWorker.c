@@ -463,7 +463,7 @@ int zanWorker_send2networker(swEventData *ev_data, size_t sendn, int session_id)
 {
     int ret = -1;
     zanServer *serv = ServerG.serv;
-    swSession *session = zanServer_get_session(serv, session_id);
+    zanSession *session = zanServer_get_session(serv, session_id);
     zanWorker *worker = zanServer_get_worker(serv, session->networker_id);
 
     zanDebug("session_id=%d, sendn=%d, networker_id=%d", session_id, (int)sendn, session->networker_id);

@@ -484,9 +484,11 @@ void php_swoole_server_before_start(zanServer *serv, zval *zobject TSRMLS_DC)
     }
 }
 
-zval* php_swoole_server_get_callback(zanServer *serv, int server_fd, int event_type)
+zval* php_swoole_server_get_callback(zanServer *serv, int server_fd, int networker_id, int event_type)
 {
-    swListenPort *port = serv->connection_list[server_fd].object;
+    int networker_index = zanServer_get_networker_index(networker_id);
+
+    swListenPort *port = serv->connection_list[networker_index][server_fd].object;
     swoole_server_port_property *property = (port)? port->ptr:NULL;
     if (event_type >= PHP_SERVER_PORT_CALLBACK_NUM || !property)
     {
@@ -1017,7 +1019,7 @@ void php_swoole_onConnect(zanServer *serv, swDataHead *info)
     zanTrace("onConnect in, fd=%d, from_fd=%d, from_id=%d, type=%d, worker_id=%d",
              info->fd, info->from_fd, info->from_id, info->type, info->worker_id);
 
-    zval *callback = php_swoole_server_get_callback(serv, info->from_fd, SW_SERVER_CB_onConnect);
+    zval *callback = php_swoole_server_get_callback(serv, info->from_fd, info->from_id, SW_SERVER_CB_onConnect);
     if (!callback || ZVAL_IS_NULL(callback))
     {
         return;
@@ -1063,7 +1065,7 @@ int php_swoole_onReceive(zanServer *serv, swEventData *req)
 {
     SWOOLE_FETCH_TSRMLS;
 
-    zval *callback = php_swoole_server_get_callback(serv, req->info.from_fd, SW_SERVER_CB_onReceive);
+    zval *callback = php_swoole_server_get_callback(serv, req->info.from_fd, req->info.from_id, SW_SERVER_CB_onReceive);
     if (swoole_check_callable(callback TSRMLS_CC) < 0)
     {
         return ZAN_OK;
@@ -1210,7 +1212,7 @@ static int php_swoole_onPacket(zanServer *serv, swEventData *req)
 {
     SWOOLE_FETCH_TSRMLS;
 
-    zval *callback = php_swoole_server_get_callback(serv, req->info.from_fd, SW_SERVER_CB_onPacket);
+    zval *callback = php_swoole_server_get_callback(serv, req->info.from_fd, req->info.from_id, SW_SERVER_CB_onPacket);
     if (!callback || ZVAL_IS_NULL(callback))
     {
         swoole_php_fatal_error(E_WARNING, "onPacket callback is null.");
@@ -1284,7 +1286,7 @@ void php_swoole_onClose(zanServer *serv, swDataHead *info)
 {
     SWOOLE_FETCH_TSRMLS;
 
-    zval *callback = php_swoole_server_get_callback(serv, info->from_fd, SW_SERVER_CB_onClose);
+    zval *callback = php_swoole_server_get_callback(serv, info->from_fd, info->from_id, SW_SERVER_CB_onClose);
     if (!callback || ZVAL_IS_NULL(callback))
     {
         return;

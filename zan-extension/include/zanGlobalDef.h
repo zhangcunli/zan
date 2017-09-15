@@ -66,13 +66,13 @@ typedef struct _zanServer
 
     swListenPort *listen_list;
 
-    uint32_t      user_worker_num;       ///TODO::: GS
+    uint32_t      user_worker_num;       ///TODO:::GS
     zanWorker   **user_workers;
     swHashMap    *user_worker_map;
     zanUserWorker_node *user_worker_list;
 
-    swConnection *connection_list;
-    swSession    *session_list;
+    zanSession     *session_list;
+    swConnection   **connection_list;
 
     void *ptr2;
 

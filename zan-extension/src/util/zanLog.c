@@ -105,7 +105,7 @@ void zanLog_put(int level, char *cnt)
     {
     case ZAN_PROCESS_MASTER:
         process_flag = 'm';
-        process_id = 100; /////
+        process_id = 100; /////todo
         break;
     case ZAN_PROCESS_WORKER:
         process_flag = 'w';
