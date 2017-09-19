@@ -153,36 +153,6 @@ int zanPool_worker_init(zanProcessPool *pool)
     pool->main_loop      = zanWorker_loop;
     pool->start_id       = 0;
 
-#if 0
-    zanServer *serv = ServerG.serv;
-    int buffer_input_size = (serv->listen_list->open_eof_check ||
-                             serv->listen_list->open_length_check ||
-                             serv->listen_list->open_http_protocol)?
-                            serv->listen_list->protocol.package_max_length:
-                            SW_BUFFER_SIZE_BIG;
-
-
-    ///TODO:::
-    int buffer_num = /*serv->reactor_num + */ serv->dgram_port_num;
-    ServerWG.buffer_input = zan_malloc(sizeof(swString*) * buffer_num);
-    if (!SwooleWG.buffer_input)
-    {
-        zanError("malloc for ServerWG.buffer_input failed.");
-        return ZAN_ERR;
-    }
-
-    int index = 0;
-    for (index = 0; index < buffer_num; index++)
-    {
-        ServerWG.buffer_input[index] = swString_new(buffer_input_size);
-        if (!ServerWG.buffer_input[index])
-        {
-            zanError("buffer_input init failed.");
-            return ZAN_ERR;
-        }
-    }
-#endif
-
     return ZAN_OK;
 }
 
@@ -546,4 +516,27 @@ void zan_stats_set_worker_status(zanWorker *worker, int status)
         zanWarn("Set worker status failed, unknow worker[%d] status[%d]", worker->worker_id, status);
     }
     ServerStatsG->lock.unlock(&ServerStatsG->lock);
+}
+
+//根据ID fork指定的worker
+zan_pid_t zanMaster_spawnworker(zanProcessPool *pool, zanWorker *worker)
+{
+    zan_pid_t pid = fork();
+    //fork() failed
+    if (pid < 0)
+    {
+        zanError("Fork Worker failed. Error: %s [%d]", strerror(errno), errno);
+        return ZAN_ERR;
+    }
+    //worker child processor
+    else if (pid == 0)
+    {
+    	int ret = zanWorker_loop(pool, worker);
+        exit(ret);
+    }
+    //parent,add to writer
+    else
+    {
+        return pid;
+    }
 }

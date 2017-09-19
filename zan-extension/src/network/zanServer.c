@@ -33,8 +33,6 @@
 #include "zanSocket.h"
 #include "zanLog.h"
 
-///TODO::: swoole_server
-
 zanServerG   ServerG;              //Local Global Variable
 zanServerGS *ServerGS = NULL;      //Share Memory Global Variable
 zanWorkerG   ServerWG;             //Worker Global Variable
@@ -70,13 +68,13 @@ void zan_server_set_init(void)
     zanServerSet *servSet = &ServerG.servSet;
 
     //servSet->reactor_num        = ZAN_REACTOR_NUM;    //todo:::delete or replaced with networker_num
-    servSet->worker_num         = 1; //ZAN_CPU_NUM;
-    servSet->net_worker_num     = 1; //ZAN_CPU_NUM;
+    servSet->worker_num         = ZAN_CPU_NUM;
+    servSet->net_worker_num     = ZAN_CPU_NUM;
     servSet->dispatch_mode      = SW_DISPATCH_FDMOD;
     servSet->max_connection     = ServerG.max_sockets;
 
     //just for test
-    servSet->task_worker_num    = 1;
+    servSet->task_worker_num    = 0;
 
     servSet->log_level          = 5;
     servSet->task_ipc_mode      = ZAN_IPC_UNSOCK;
@@ -99,7 +97,6 @@ void zan_server_set_init(void)
     servSet->http_parse_post = 1;
 }
 
-//TODO:::
 int zanServer_create(zanServer *serv)
 {
     ServerG.factory = &serv->factory;
@@ -116,7 +113,7 @@ int zanServer_create(zanServer *serv)
     serv->connection_list  = (swConnection**)sw_shm_calloc(servSet->net_worker_num, sizeof(swConnection*));
     for (uint32_t index = 0; index < servSet->net_worker_num; index++)
     {
-        zanWarn("index=%d, networker_num=%d", index, servSet->net_worker_num);
+        zanWarn("calloc connection_list: index=%d, networker_num=%d", index, servSet->net_worker_num);
         serv->connection_list[index] = (swConnection*)sw_shm_calloc(ServerG.servSet.max_connection, sizeof(swConnection));
     }
 
@@ -138,7 +135,6 @@ int zanServer_start(zanServer *serv)
         return ZAN_ERR;
     }
 
-    zanLog_init(ServerG.servSet.log_file, 0);
     if (ZAN_OK != zan_daemonize())
     {
         zanError("zan_daemonize failed.");
@@ -152,6 +148,7 @@ int zanServer_start(zanServer *serv)
         zanDebug("ls->port=%d, ls->host=%s, ls->sock=%d", ls->port, ls->host, ls->sock);
         if (zanPort_set_ListenOption(ls) < 0)
         {
+            zanError("setlistion failed: ls->port=%d, ls->host=%s, ls->sock=%d", ls->port, ls->host, ls->sock);
             return ZAN_ERR;
         }
     }
@@ -169,7 +166,7 @@ int zanServer_start(zanServer *serv)
     int ret = zan_master_process_loop(serv);
 
     exit(ret);
-    ///swServer_free(serv);
+    ///zanServer_free(serv);
 
     return SW_OK;
 }
@@ -674,10 +671,9 @@ swConnection* zanServer_get_connection(zanServer *serv, int networker_id, int fd
 
 swString *zanWorker_get_buffer(zanServer *serv, int worker_id)
 {
-    //input buffer
-    return ServerWG.buffer_input[worker_id];
+    zanWarn("TEST.....");
+    return NULL;
 }
-
 
 zanSession* zanServer_get_session(zanServer *serv, uint32_t session_id)
 {
@@ -687,6 +683,15 @@ zanSession* zanServer_get_session(zanServer *serv, uint32_t session_id)
 int zanServer_getFd_bySession(zanServer *serv, uint32_t session_id)
 {
     return serv->session_list[session_id % SW_SESSION_LIST_SIZE].accept_fd;
+}
+
+swConnection* zanServer_get_connection_by_sessionId(zanServer *serv, uint32_t session_id)
+{
+    zanSession* session = zanServer_get_session(serv, session_id);
+    uint32_t accept_fd    = session->accept_fd;
+    uint32_t networker_id = session->networker_id;
+
+    return zanServer_get_connection(serv, networker_id, accept_fd);
 }
 
 swListenPort* zanServer_get_port(zanServer *serv, int networker_id, int fd)
@@ -750,3 +755,44 @@ uint32_t zanServer_get_connection_num(zanServer *serv)
 
     return sum;
 }
+
+int zanServer_tcp_sendfile(zanServer *serv, int fd, char *filename, uint32_t len)
+{
+#ifdef SW_USE_OPENSSL
+    swConnection *conn = zanServer_verify_connection(serv, fd);
+    if (conn && conn->ssl)
+    {
+        zanError("SSL session#%d cannot use sendfile().", fd);
+        return ZAN_ERR;
+    }
+#endif
+
+    swSendData send_data;
+    send_data.info.len = len;
+    char buffer[SW_BUFFER_SIZE] = {0};
+
+    //file name size
+    if (send_data.info.len > SW_BUFFER_SIZE - 1)
+    {
+        zanWarn("sendfile name too long. [MAX_LENGTH=%d]",(int) SW_BUFFER_SIZE - 1);
+        return ZAN_ERR;
+    }
+
+    //check file exists
+    if (access(filename, R_OK) < 0)
+    {
+        zanError("file[%s] not found.", filename);
+        return ZAN_ERR;
+    }
+
+    send_data.info.fd = fd;
+    send_data.info.type = SW_EVENT_SENDFILE;
+    memcpy(buffer, filename, send_data.info.len);
+    buffer[send_data.info.len] = 0;
+    send_data.info.len++;
+    send_data.length = 0;
+    send_data.data = buffer;
+
+    return serv->factory.finish(&serv->factory, &send_data);
+}
+

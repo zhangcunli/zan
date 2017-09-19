@@ -118,13 +118,13 @@ int zanReactor_onAccept(swReactor *reactor, swEvent *event)
         }
 #endif
 
-        int connection_num = zanServer_get_connection_num(serv);
+        uint32_t connection_num = zanServer_get_connection_num(serv);
         zanDebug("[NetWorker] Accept new connection. connection_num=%d|networker_id/reactor_id=%d|new_fd=%d", connection_num, reactor->id, new_fd);
 
         //TODO::: too many connection; max_connection/networker_num
         if (connection_num >= servSet->max_connection)
         {
-            zanWarn("Too many connections [now: %d], close it.", new_fd);
+            zanWarn("Too many connections [now: %d], max_connection=%d, close it.", new_fd, servSet->max_connection);
             close(new_fd);
             return ZAN_OK;
         }
@@ -134,6 +134,9 @@ int zanReactor_onAccept(swReactor *reactor, swEvent *event)
         swConnection *conn = zanConnection_create(serv, listen_host, new_fd, event->fd, reactor->id);
         memcpy(&conn->info.addr, &client_addr, sizeof(client_addr));
         conn->socket_type = listen_host->type;
+
+        zan_stats_incr(&ServerStatsG->accept_count);
+        zan_stats_incr(&ServerStatsG->connection_count);
 
 #ifdef SW_USE_OPENSSL
         if (listen_host->ssl)
@@ -188,9 +191,6 @@ static swConnection* zanConnection_create(zanServer *serv, swListenPort *ls, int
     {
         zanServer_set_maxfd(serv, networker_index, fd);
     }
-
-    sw_stats_incr(&ServerStatsG->accept_count);
-    sw_stats_incr(&ServerStatsG->connection_count);
 
     connection = &(serv->connection_list[networker_index][fd]);
     bzero(connection, sizeof(swConnection));

@@ -76,10 +76,14 @@ swListenPort* zanServer_get_port(zanServer *serv, int networker_id, int fd);
 swConnection* zanServer_get_connection(zanServer *serv, int networker_id, int fd);
 int zanServer_getFd_bySession(zanServer *serv, uint32_t session_id);
 void zanServer_free_connection_buffer(zanServer *serv, int networker_id, int fd);
+swConnection* zanServer_get_connection_by_sessionId(zanServer *serv, uint32_t session_id);
 
 int zanServer_get_networker_index(int net_worker_id);
 
 uint32_t zanServer_get_connection_num(zanServer *serv);
+
+int zanServer_tcp_sendfile(zanServer *serv, int fd, char *filename, uint32_t len);
+
 
 #ifdef __cplusplus
 }
