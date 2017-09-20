@@ -135,8 +135,13 @@ int zan_processpool_create(zanProcessPool *pool, int process_type)
             return ZAN_ERR;
         }
     }
-    else if (ZAN_PROCESS_TASKWORKER == process_type && ServerG.servSet.task_worker_num > 0)
+    else if (ZAN_PROCESS_TASKWORKER == process_type)
     {
+        if (ServerG.servSet.task_worker_num <= 0)
+        {
+            return ZAN_OK;
+        }
+
         if (ZAN_OK != zanPool_taskworker_alloc(pool))
         {
             zanError("alloc taskworker resource failed.");
@@ -286,38 +291,38 @@ int zan_master_process_loop(zanServer *serv)
 {
     int status = 0;
     zan_pid_t pid = -1;
-	zan_pid_t new_pid = -1;
-	int index = 0;
-	
-	int reloadworker_index = 0;
-	int result = -1;
+    zan_pid_t new_pid = -1;
+    int index = 0;
 
-	ServerG.use_signalfd = 0;
-	ServerG.use_timerfd = 0;
-	
-	memset(&MasterProcess, 0, sizeof(MasterProcess));
-	   
-	if (serv->onStart)
+    int reloadworker_index = 0;
+    int result = -1;
+
+    ServerG.use_signalfd = 0;
+    ServerG.use_timerfd = 0;
+
+    memset(&MasterProcess, 0, sizeof(MasterProcess));
+
+    if (serv->onStart)
     {
         //zanWarn("call server onStart");
         serv->onStart(serv);
     }
 
-	//init reload worker
-	unsigned int reloadworker_num = ServerG.servSet.worker_num + ServerG.servSet.task_worker_num;
-	if(reloadworker_num == 0)
-	{
-		zanError("No worker running");
-		return ZAN_ERR;
-	}
-	zanWorker *reload_workers = zan_calloc(reloadworker_num, sizeof(zanWorker));
-	if(NULL == reload_workers)
-	{
-		zanError("malloc[reload_workers] failed");
-		return ZAN_ERR;
-	}
-	
-	//for reload
+    //init reload worker
+    unsigned int reloadworker_num = ServerG.servSet.worker_num + ServerG.servSet.task_worker_num;
+    if(reloadworker_num == 0)
+    {
+        zanError("No worker running");
+        return ZAN_ERR;
+    }
+    zanWorker *reload_workers = zan_calloc(reloadworker_num, sizeof(zanWorker));
+    if(NULL == reload_workers)
+    {
+        zanError("malloc[reload_workers] failed");
+        return ZAN_ERR;
+    }
+
+    //for reload
     swSignal_add(SIGHUP, NULL);
     swSignal_add(SIGTERM, zanMaster_signalhandle);
     swSignal_add(SIGUSR1, zanMaster_signalhandle);
@@ -325,12 +330,12 @@ int zan_master_process_loop(zanServer *serv)
 #ifdef SIGRTMIN
     swSignal_add(SIGRTMIN, zanMaster_signalhandle);
 #endif
-	
-	if(ServerG.main_reactor != NULL)
-	{
-		ServerG.main_reactor = NULL;
-	}
-	
+
+    if(ServerG.main_reactor != NULL)
+    {
+        ServerG.main_reactor = NULL;
+    }
+
     while (ServerG.running > 0)
     {
         zanWarn("ServerG.running=%d, process_type=%d, master_pid=%d", ServerG.running, ServerG.process_type, ServerGS->master_pid);
@@ -340,14 +345,14 @@ int zan_master_process_loop(zanServer *serv)
             zanWarn("wait error, pid=%d", pid);
             //sleep(3);
             //continue;
-			if (MasterProcess.reloading == 0)
+            if (MasterProcess.reloading == 0)
             {
                 zanTrace("wait() failed. Error: %s [%d]", strerror(errno), errno);
             }
-			else if(MasterProcess.reload_event_worker == 1)
-			{
-				zanWarn("Server is reloading event_worker now.");
-				memcpy(reload_workers, ServerGS->event_workers.workers, sizeof(zanWorker) * ServerG.servSet.worker_num);
+            else if(MasterProcess.reload_event_worker == 1)
+            {
+                zanWarn("Server is reloading event_worker now.");
+                memcpy(reload_workers, ServerGS->event_workers.workers, sizeof(zanWorker) * ServerG.servSet.worker_num);
                 reloadworker_num = ServerG.servSet.worker_num;
                 if (ServerG.servSet.task_worker_num > 0)
                 {
@@ -357,102 +362,102 @@ int zan_master_process_loop(zanServer *serv)
 
                 reloadworker_index = 0;
                 MasterProcess.reload_event_worker = 0;
-				
-				result = zanworker_free(&reloadworker_index, reload_workers);
-				if(result < 0)
-				{
-					zanError("kill workers failed");
-					return ZAN_ERR;
-				}
-			}
-			else if(MasterProcess.reload_task_worker == 1)
-			{
-				zanWarn("Server is reloading task_worker now.");
+
+                result = zanworker_free(&reloadworker_index, reload_workers);
+                if(result < 0)
+                {
+                    zanError("kill workers failed");
+                    return ZAN_ERR;
+                }
+            }
+            else if(MasterProcess.reload_task_worker == 1)
+            {
+                zanWarn("Server is reloading task_worker now.");
                 if (ServerG.servSet.task_worker_num == 0)
                 {
                     zanWarn("cannot reload workers, because server no have task workers.");
                     continue;
                 }
-				
-				memcpy(reload_workers, ServerGS->task_workers.workers, sizeof(zanWorker) * ServerG.servSet.task_worker_num);
+
+                memcpy(reload_workers, ServerGS->task_workers.workers, sizeof(zanWorker) * ServerG.servSet.task_worker_num);
                 reloadworker_num = SwooleG.task_worker_num;
                 reloadworker_index = 0;
                 MasterProcess.reload_task_worker = 0;
-				
-				result = zanworker_free(&reloadworker_index, reload_workers);
-				if(result < 0)
-				{
-					zanError("kill task workers failed");
-					return ZAN_ERR;
-				}
-			}
+
+                result = zanworker_free(&reloadworker_index, reload_workers);
+                if(result < 0)
+                {
+                    zanError("kill task workers failed");
+                    return ZAN_ERR;
+                }
+            }
         }
-		
-		else if((pid > 0) && (ServerG.running == 1))
-		{
-			for(index = 0; index < ServerG.servSet.worker_num; ++index)
-			{
-				if(pid != ServerGS->event_workers.workers[index].worker_pid)
-				{
-					continue;
-				}
-				else
-				{
-					sw_stats_incr(status == 0 ? &ServerStatsG->worker_normal_exit
-								  : &ServerStatsG->worker_abnormal_exit);
-					zanMaster_checkexitstatus(serv, index, pid, status);
-					pid = 0;
-					while (1)
-					{
-						new_pid = zanMaster_spawnworker(&ServerGS->event_workers, &(ServerGS->event_workers.workers[index]));
-						if (new_pid < 0)
-						{
-							usleep(100000);
-							continue;
-						}
-						else
-						{
-							ServerGS->event_workers.workers[index].worker_pid = new_pid;
-							break;
-						}
-					}
-				}
-			}
-			
-			zanWorker *exit_worker = NULL;
-			//task worker
-			if(ServerGS->task_workers.map != NULL)
-			{
-				exit_worker = swHashMap_find_int(ServerGS->task_workers.map, pid);
-				if (exit_worker != NULL)
-				{
-					sw_stats_incr(status == 0 ? &ServerStatsG->task_worker_normal_exit
-								  : &ServerStatsG->task_worker_abnormal_exit);
-					zanMaster_checkexitstatus(serv, exit_worker->worker_id, pid, status);
-					if (exit_worker->deleted == 1)  //主动回收不重启
-					{
-						exit_worker->deleted = 0;
-					}
-					else
-					{
-						zanTaskWorker_spawn(exit_worker);
-					}
-				}
-			}
-			
-			if(serv->user_worker_map != NULL)
-			{
-				zanMaster_waituserworker(&(ServerGS->event_workers), pid);
-			}
-		}
-		else
-		{
-			break;
-		}	
-		//zanDebug("wait success, child pid=%d exit, status=%d", pid, status);
+
+        else if((pid > 0) && (ServerG.running == 1))
+        {
+            for(index = 0; index < ServerG.servSet.worker_num; ++index)
+            {
+                if(pid != ServerGS->event_workers.workers[index].worker_pid)
+                {
+                    continue;
+                }
+                else
+                {
+                    sw_stats_incr(status == 0 ? &ServerStatsG->worker_normal_exit
+                                  : &ServerStatsG->worker_abnormal_exit);
+                    zanMaster_checkexitstatus(serv, index, pid, status);
+                    pid = 0;
+                    while (1)
+                    {
+                        new_pid = zanMaster_spawnworker(&ServerGS->event_workers, &(ServerGS->event_workers.workers[index]));
+                        if (new_pid < 0)
+                        {
+                            usleep(100000);
+                            continue;
+                        }
+                        else
+                        {
+                            ServerGS->event_workers.workers[index].worker_pid = new_pid;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            zanWorker *exit_worker = NULL;
+            //task worker
+            if(ServerGS->task_workers.map != NULL)
+            {
+                exit_worker = swHashMap_find_int(ServerGS->task_workers.map, pid);
+                if (exit_worker != NULL)
+                {
+                    sw_stats_incr(status == 0 ? &ServerStatsG->task_worker_normal_exit
+                                  : &ServerStatsG->task_worker_abnormal_exit);
+                    zanMaster_checkexitstatus(serv, exit_worker->worker_id, pid, status);
+                    if (exit_worker->deleted == 1)  //主动回收不重启
+                    {
+                        exit_worker->deleted = 0;
+                    }
+                    else
+                    {
+                        zanTaskWorker_spawn(exit_worker);
+                    }
+                }
+            }
+
+            if(serv->user_worker_map != NULL)
+            {
+                zanMaster_waituserworker(&(ServerGS->event_workers), pid);
+            }
+        }
+        else
+        {
+            break;
+        }
+        //zanDebug("wait success, child pid=%d exit, status=%d", pid, status);
     }
 
-	sw_free(reload_workers);
+    sw_free(reload_workers);
 
     //kill all child process
     for (index = 0; index < ServerG.servSet.worker_num; ++index)
@@ -490,7 +495,7 @@ int zan_master_process_loop(zanServer *serv)
             {
                 break;
             }
-            swKill(user_worker->worker_pid, SIGTERM); 
+            swKill(user_worker->worker_pid, SIGTERM);
         }
         //wait user process
         while (1)
@@ -513,74 +518,74 @@ int zan_master_process_loop(zanServer *serv)
 
 int zanworker_free(int *reloadworker_index, zanWorker *reload_workers)
 {
-	if(reload_workers == NULL)
-	{
-		zanError("reload workers is null");
-		return ZAN_ERR;
-	}
-	
-	int index = *reloadworker_index;
-	
-	if(MasterProcess.reloading == 1)
-	{
-		if(index >= (ServerG.servSet.worker_num + ServerG.servSet.task_worker_num))
-		{
-			MasterProcess.reloading = 0;
-			index = 0;
-			*reloadworker_index = index;
-			return ZAN_OK;
-		}
-		
-		zanWarn("start kill workers, id: %d, pid: %d.", index, reload_workers[index].worker_pid);
-		int result = swKill(reload_workers[index].worker_pid, SIGTERM);
-		if (result < 0)
-		{
-			zanSysError("kill(%d, SIGTERM) failed.", reload_workers[index].worker_pid);
-			return ZAN_ERR;
-		}
-		++index;
-		*reloadworker_index = index;
-		ServerStatsG->last_reload = time(NULL);
-	}
-	else
-	{
-		zanWarn("do not reload worker");
-		return ZAN_ERR;
-	}
-	return ZAN_OK;
+    if(reload_workers == NULL)
+    {
+        zanError("reload workers is null");
+        return ZAN_ERR;
+    }
+
+    int index = *reloadworker_index;
+
+    if(MasterProcess.reloading == 1)
+    {
+        if(index >= (ServerG.servSet.worker_num + ServerG.servSet.task_worker_num))
+        {
+            MasterProcess.reloading = 0;
+            index = 0;
+            *reloadworker_index = index;
+            return ZAN_OK;
+        }
+
+        zanWarn("start kill workers, id: %d, pid: %d.", index, reload_workers[index].worker_pid);
+        int result = swKill(reload_workers[index].worker_pid, SIGTERM);
+        if (result < 0)
+        {
+            zanSysError("kill(%d, SIGTERM) failed.", reload_workers[index].worker_pid);
+            return ZAN_ERR;
+        }
+        ++index;
+        *reloadworker_index = index;
+        ServerStatsG->last_reload = time(NULL);
+    }
+    else
+    {
+        zanWarn("do not reload worker");
+        return ZAN_ERR;
+    }
+    return ZAN_OK;
 }
 
 static void zanMaster_signalhandle(int sig)
 {
     switch (sig)
     {
-		case SIGTERM:
-			ServerG.running = 0;
-			break;
-		case SIGUSR1:
-			if (MasterProcess.reloading == 0)
-			{
-				MasterProcess.reloading = 1;
-				MasterProcess.reload_event_worker = 1;
-			}
-			break;
-		case SIGUSR2:
-			if (MasterProcess.reloading == 0)
-			{
-				MasterProcess.reloading = 1;
-				MasterProcess.reload_task_worker = 1;
-			}
-			break;
-		default:
+        case SIGTERM:
+            ServerG.running = 0;
+            break;
+        case SIGUSR1:
+            if (MasterProcess.reloading == 0)
+            {
+                MasterProcess.reloading = 1;
+                MasterProcess.reload_event_worker = 1;
+            }
+            break;
+        case SIGUSR2:
+            if (MasterProcess.reloading == 0)
+            {
+                MasterProcess.reloading = 1;
+                MasterProcess.reload_task_worker = 1;
+            }
+            break;
+        default:
 #ifdef SIGRTMIN
-			if (sig == SIGRTMIN)
-			{
-				zanServer_reopen_log_file(ServerG.serv);
-			}
+            if (sig == SIGRTMIN)
+            {
+                zanServer_reopen_log_file(ServerG.serv);
+            }
 #endif
-			break;
+            break;
     }
-	return;
+    return;
 }
 
 static void zanMaster_checkexitstatus(zanServer *serv, int worker_id, zan_pid_t pid, int status)
@@ -593,8 +598,8 @@ static void zanMaster_checkexitstatus(zanServer *serv, int worker_id, zan_pid_t 
             serv->onWorkerError(serv, worker_id, pid, WEXITSTATUS(status), WTERMSIG(status));
         }
     }
-	
-	return;
+
+    return;
 }
 
 int zanMaster_waituserworker(zanProcessPool *pool, zan_pid_t pid)
@@ -616,7 +621,7 @@ zan_pid_t zanMaster_spawnuserworker(zanServer *serv, zanWorker* worker)
     zan_pid_t pid = fork();
     if (pid < 0)
     {
-    	zanError("Fork Worker failed. Error: %s [%d]", strerror(errno), errno);
+        zanError("Fork Worker failed. Error: %s [%d]", strerror(errno), errno);
         return ZAN_ERR;
     }
     //child
