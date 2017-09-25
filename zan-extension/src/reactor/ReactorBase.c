@@ -239,7 +239,7 @@ static void swReactor_onTimeout_and_Finish(swReactor *reactor)
 
 #if 0
     //server worker
-    swWorker *worker = SwooleWG.worker;
+    swWorker *worker = ServerWG.worker;
     if (worker != NULL && SwooleWG.reload)
     {
         SwooleWG.reload_count++;
@@ -254,7 +254,7 @@ static void swReactor_onTimeout_and_Finish(swReactor *reactor)
     //client
     if (ServerG.serv == NULL && ServerG.timer.num <= 0 && !reactor->defer_callback_list)
     {
-        if (SwooleAIO.init && reactor->event_num == 1 && SwooleAIO.task_num == 0)
+        if (ZanAIO.init && reactor->event_num == 1 && ZanAIO.task_num == 0)
         {
             reactor->running = 0;
         }

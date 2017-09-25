@@ -85,12 +85,6 @@ void zan_server_set_init(void)
     servSet->buffer_output_size = SW_BUFFER_OUTPUT_SIZE;
     servSet->pipe_buffer_size   = SW_PIPE_BUFFER_SIZE;
 
-#ifdef __MACH__
-    ServerG.servSet.socket_buffer_size = 256 * 1024;
-#else
-    servSet->socket_buffer_size = SW_SOCKET_BUFFER_SIZE;
-#endif
-
     servSet->heartbeat_idle_time      = SW_HEARTBEAT_IDLE;
     servSet->heartbeat_check_interval = SW_HEARTBEAT_CHECK;
 
@@ -670,12 +664,6 @@ swConnection* zanServer_get_connection(zanServer *serv, int networker_id, int fd
     }
 }
 
-swString *zanWorker_get_buffer(zanServer *serv, int worker_id)
-{
-    zanWarn("TEST.....");
-    return NULL;
-}
-
 zanSession* zanServer_get_session(zanServer *serv, uint32_t session_id)
 {
     return &serv->session_list[session_id % SW_SESSION_LIST_SIZE];
@@ -790,10 +778,27 @@ int zanServer_tcp_sendfile(zanServer *serv, int fd, char *filename, uint32_t len
     send_data.info.type = SW_EVENT_SENDFILE;
     memcpy(buffer, filename, send_data.info.len);
     buffer[send_data.info.len] = 0;
-    send_data.info.len++;
+    ++send_data.info.len;
     send_data.length = 0;
     send_data.data = buffer;
 
     return serv->factory.finish(&serv->factory, &send_data);
 }
 
+swString *zanServer_get_buffer(zanServer *serv, int networker_id, int fd)
+{
+    int networker_index = zanServer_get_networker_index(networker_id);
+    swString *buffer = serv->connection_list[networker_index][fd].object;
+
+    if (buffer == NULL)
+    {
+        buffer = swString_new(SW_BUFFER_SIZE);
+        //alloc memory failed.
+        if (!buffer)
+        {
+            return NULL;
+        }
+        serv->connection_list[networker_index][fd].object = buffer;
+    }
+    return buffer;
+}

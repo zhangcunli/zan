@@ -154,6 +154,9 @@ static inline int SW_Z_TYPE_P(zval *z)
 inline int SW_Z_TYPE_P(zval *z);
 #define SW_Z_TYPE_PP(z)        SW_Z_TYPE_P(*z)
 
+#define zan_convert_to_long(val) convert_to_long(val)
+#define zan_convert_to_boolean(val) convert_to_boolean(val)
+
 static sw_inline int sw_convert_to_string(zval* val)
 {
     int type = Z_TYPE_P(val);
@@ -304,6 +307,9 @@ static sw_inline int sw_call_user_function_ex(HashTable *function_table, zval** 
 #define SW_ZVAL_STRING(z,s,dup)               ZVAL_STRING(z,s)
 #define sw_smart_str                          smart_string
 #define zend_get_class_entry                  Z_OBJCE_P
+
+#define zan_convert_to_long(val) convert_to_long_ex(val)
+#define zan_convert_to_boolean(val) convert_to_boolean_ex(val)
 
 static sw_inline int sw_convert_to_string(zval* val)
 {

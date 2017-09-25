@@ -1235,7 +1235,7 @@ static int php_swoole_onPacket(zanServer *serv, swEventData *req)
     add_assoc_long(zaddr, "server_socket", req->info.from_fd);
 
     //udp ipv4
-    swString *buffer = zanWorker_get_buffer(serv, req->info.from_id);
+    swString *buffer = NULL;////////// = zanWorker_get_buffer(serv, req->info.from_id);
     swDgramPacket *packet = (swDgramPacket*) buffer->str;
     if (req->info.type == SW_EVENT_UDP)
     {
@@ -1568,7 +1568,7 @@ PHP_METHOD(swoole_server, set)
     value = NULL;
     if (sw_zend_hash_find(vht, ZEND_STRS("daemonize"), (void **) &value) == SUCCESS)
     {
-        convert_to_boolean(value);
+        zan_convert_to_boolean(value);
         servSet->daemonize = (uint16_t)Z_BVAL_P(value);
     }
 
@@ -1576,7 +1576,7 @@ PHP_METHOD(swoole_server, set)
     value = NULL;
     if (sw_zend_hash_find(vht, ZEND_STRS("net_worker_num"), (void **) &value) == SUCCESS)
     {
-        convert_to_long(value);
+        zan_convert_to_long(value);
         servSet->net_worker_num = (uint32_t) Z_LVAL_P(value);
     }
 
@@ -1584,7 +1584,7 @@ PHP_METHOD(swoole_server, set)
     value = NULL;
     if (sw_zend_hash_find(vht, ZEND_STRS("worker_num"), (void **) &value) == SUCCESS)
     {
-        convert_to_long(value);
+        zan_convert_to_long(value);
         servSet->worker_num = (uint32_t) Z_LVAL_P(value);
     }
 
@@ -2198,7 +2198,7 @@ PHP_METHOD(swoole_server, sendfile)
     }
 
     zval* zobject = getThis();
-    swServer *serv = swoole_get_object(zobject);
+    zanServer *serv = swoole_get_object(zobject);
     if (!serv)
     {
         zanWarn("not create servers.");
@@ -2225,7 +2225,7 @@ PHP_METHOD(swoole_server, sendfile)
         RETURN_FALSE;
     }
 
-    SW_CHECK_RETURN(swServer_tcp_sendfile(serv, (int) fd, filename, len));
+    SW_CHECK_RETURN(zanServer_tcp_sendfile(serv, (int) fd, filename, len));
 }
 
 PHP_METHOD(swoole_server, close)
@@ -2363,18 +2363,17 @@ PHP_METHOD(swoole_server, stats)
 
 PHP_METHOD(swoole_server, reload)
 {
-#if 0
-    if (!SwooleGS->start)
+    if (!ServerGS->started)
     {
-        swWarn("Server is not running.");
+        zanWarn("Server is not running.");
         RETURN_FALSE;
     }
 
     zval* zobject = getThis();
-    swServer *serv = swoole_get_object(zobject);
+    zanServer *serv = swoole_get_object(zobject);
     if (!serv)
     {
-        swWarn("not create servers.");
+        zanWarn("not create servers.");
         RETURN_FALSE;
     }
 
@@ -2384,12 +2383,12 @@ PHP_METHOD(swoole_server, reload)
         return;
     }
 
-    if (swKill(SwooleGS->manager_pid, only_reload_taskworker ? SIGUSR2 : SIGUSR1) < 0)
+    if (swKill(ServerGS->master_pid, only_reload_taskworker ? SIGUSR2 : SIGUSR1) < 0)
     {
-        swSysError("kill() failed.");
+        zanSysError("kill() failed.");
         RETURN_FALSE;
     }
-#endif
+
     RETURN_TRUE;
 }
 
