@@ -198,7 +198,7 @@ static inline zanWorker* zan_pool_get_worker(zanProcessPool *pool, int worker_id
     return &(pool->workers[worker_id - pool->start_id]);
 }
 
-swString *zanWorker_get_buffer(int networker_index);
+swString *zanWorker_get_buffer(int from_id);
 
 
 #ifdef __cplusplus

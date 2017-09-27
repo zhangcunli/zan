@@ -116,7 +116,7 @@ typedef struct _swConnection
      */
     uint8_t from_fd;
 
-    uint8_t from_net_id;  //networker_id
+    uint8_t networker_id;  //networker_id
 
     /**
      * socket address

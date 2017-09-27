@@ -17,8 +17,8 @@
 */
 #include "php_swoole.h"
 #include "swProtocol/nova.h"
-#include "swBaseOperator.h"
-#include "swLog.h"
+
+#include "zanLog.h"
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -118,20 +118,20 @@ PHP_FUNCTION(nova_decode)
     }
 
     if (swNova_IsNovaPack(pBuf, nBufLen) == SW_ERR) {
-        swWarn("not a nova packet");
+        zanWarn("not a nova packet");
         RETURN_FALSE;
     }
 
     //decode
     swNova_Header *pHeader = createNovaHeader();
     if (swNova_unpack(pBuf, nBufLen, pHeader) == SW_ERR) {
-        swWarn("unpack nova failer");
+        zanWarn("unpack nova failer");
         deleteNovaHeader(pHeader);
         RETURN_FALSE;
     }
 
     if (pHeader->msg_size > nBufLen) {
-        swWarn("body len not enough,need %ld,but only have %ld",pHeader->msg_size,nBufLen);
+        zanWarn("body len not enough,need %ld,but only have %ld",pHeader->msg_size,nBufLen);
         deleteNovaHeader(pHeader);
         RETURN_FALSE;
     }
@@ -158,20 +158,20 @@ PHP_FUNCTION(nova_decode_new)
     }
 
     if (swNova_IsNovaPack(pBuf, nBufLen) == SW_ERR) {
-        swWarn("not a nova packet");
+        zanWarn("not a nova packet");
         RETURN_FALSE;
     }
 
     //decode
     swNova_Header *pHeader = createNovaHeader();
     if (swNova_unpack(pBuf, nBufLen, pHeader) == SW_ERR) {
-        swWarn("unpack nova failer");
+        zanWarn("unpack nova failer");
         deleteNovaHeader(pHeader);
         RETURN_FALSE;
     }
 
     if (pHeader->msg_size > nBufLen) {
-        swWarn("body len not enough,need %ld,but only have %ld",pHeader->msg_size,nBufLen);
+        zanWarn("body len not enough,need %ld,but only have %ld",pHeader->msg_size,nBufLen);
         deleteNovaHeader(pHeader);
         RETURN_FALSE;
     }
@@ -374,7 +374,7 @@ PHP_FUNCTION(nova_get_sequence)
 
 PHP_FUNCTION(nova_get_time)
 {
-    RETURN_LONG(SwooleGS->now);
+    RETURN_LONG(ServerGS->server_time);
 }
 
 PHP_FUNCTION(nova_get_ip)

@@ -209,11 +209,12 @@ typedef struct
 
 typedef struct _swDataHead
 {
-    int fd;  //文件描述符
-    uint16_t len;  //长度
-    int16_t from_id;  //Reactor Id
-    uint8_t type;  //类型
-    uint8_t from_fd;
+    int      fd;       //文件描述符
+    uint8_t  type;     //类型
+    uint8_t  from_fd;
+    uint16_t len;      //长度
+    uint16_t from_id;  //Reactor Id
+    uint16_t from_net_id;
     uint16_t worker_id;
 } swDataHead;
 
