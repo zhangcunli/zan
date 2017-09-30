@@ -21,6 +21,7 @@
 
 int zanMsgQueue_push(zanMsgQueue *pMq, zanQueue_Data *in, int length);
 int zanMsgQueue_pop(zanMsgQueue *pMq, zanQueue_Data *out, int length);
+int zanMsgQueue_stat(zanMsgQueue *pMq, int *queue_num, int *queue_bytes);
 int zanMsgQueue_close(zanMsgQueue *pMq);
 
 int zanMsgQueue_create(zanMsgQueue *pMq, int blocking, key_t msg_key, long type)

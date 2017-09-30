@@ -25,7 +25,6 @@
 
 #include "zanMemory/zanShmPool.h"
 #include "zanProcess.h"
-//#include "zanReactor.h"
 #include "zanWorkers.h"
 
 #ifdef __cplusplus
@@ -246,6 +245,8 @@ typedef struct _zanServerStats
     zan_atomic_t        worker_abnormal_exit;
     zan_atomic_t        task_worker_normal_exit;
     zan_atomic_t        task_worker_abnormal_exit;
+	zan_atomic_t        networker_normal_exit;
+	zan_atomic_t        networker_abnormal_exit;
     zanWorkerStats      *workers_state;
     zanLock             lock;
 } zanServerStats;

@@ -21,13 +21,10 @@
 #include "zanSystem.h"
 #include "zanIpc.h"
 #include "zanFactory.h"
-#include "zanReactor.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-///TODO:::进程数据结构及操作
 
 enum zanWorker_status
 {
@@ -65,8 +62,10 @@ enum zanProcessType
 #define is_taskworker() (ServerG.process_type == ZAN_PROCESS_TASKWORKER)
 #define is_userworker() (ServerG.process_type == ZAN_PROCESS_USERWORKER)
 
+
 #define zanTask_type(task)                  ((task)->info.from_fd)
 
+#if 0
 typedef struct
 {
     int length;
@@ -93,6 +92,8 @@ int tmp_file_fd = open(_pkg.tmpfile, O_RDONLY);\
     close(tmp_file_fd); \
     unlink(_pkg.tmpfile); \
 }
+#endif
+
 typedef struct _zanProcessPool zanProcessPool;
 
 typedef struct _zanWorker
@@ -100,7 +101,6 @@ typedef struct _zanWorker
     uint8_t   process_type;
     zan_pid_t worker_pid;
     uint32_t  worker_id;
-    pthread_t worker_tid;
 
     uint8_t   redirect_stdout;       //redirect stdout to pipe_master
     uint8_t   redirect_stdin;        //redirect stdin to pipe_worker
@@ -114,12 +114,8 @@ typedef struct _zanWorker
     //worker
     uint32_t  request_num;
 
-    //task_worker
-    //uint8_t      ipc_mode;
-    //zanMsgQueue *queue;
     sw_atomic_t  tasking_num;
 
-    ///
     zanLock lock;
 
     int pipe;
@@ -143,7 +139,7 @@ typedef struct _zanUserWorker_node
 int zanWorker_init(zanWorker *worker);
 void zanWorker_free(zanWorker *worker);
 zan_pid_t zanMaster_spawnworker(zanProcessPool *pool, zanWorker *worker);
-
+void zan_worker_shutdown(zanProcessPool *pool);
 
 //networker<--->worker<--->task_worker
 int zanWorker_send2worker(zanWorker *dst_worker, void *buf, int n, int flag);
@@ -151,13 +147,15 @@ int zanWorker_send2networker(swEventData *ev_data, size_t sendn, int fd);
 
 int zanNetworker_send2worker(void *data, int len, uint16_t target_worker_id);
 int zanNetworker_close_connection(swReactor *reactor, int fd);
+zan_pid_t zanNetWorker_spawn(zanWorker *worker);
+void zan_networker_shutdown(zanProcessPool *pool);
 
 int zanNetworker_onClose(swReactor *reactor, swEvent *event);
 
 int zanTaskworker_finish(char *data, int data_len, int flags);
 
 zan_pid_t zanTaskWorker_spawn(zanWorker *worker);
-int zanTaskWorker_largepack(zanEventData *task, void *data, int data_len);
+int zanTaskWorker_largepack(swEventData *task, void *data, int data_len);
 
 ////////////////////////////////////////////////////////////////////////////////
 //worker pool
