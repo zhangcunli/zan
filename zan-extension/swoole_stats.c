@@ -16,9 +16,6 @@
   +----------------------------------------------------------------------+
 */
 
-//#include "swWork.h"
-//#include "swGlobalVars.h"
-//#include "swLog.h"
 
 #include "zanGlobalVar.h"
 #include "zanLog.h"

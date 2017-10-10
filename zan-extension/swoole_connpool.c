@@ -20,7 +20,6 @@
 #include "ext/standard/basic_functions.h"
 #include "Zend/zend_operators.h"
 
-//#include "swLog.h"
 #include "zanLog.h"
 
 static zend_class_entry swoole_connpool_ce;
