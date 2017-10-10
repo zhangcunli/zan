@@ -182,12 +182,12 @@ void zan_processpool_shutdown(zanProcessPool *pool)
     for (index = 0; index < ServerG.servSet.task_worker_num; ++index)
     {
         worker = &pool->workers[index];
-		if(worker->worker_pid == -1)
-		{
-			zanWarn("this worker is delete,worker_id=%d", worker->worker_id);
-			continue;
-		}
-		
+        if(worker->worker_pid == -1)
+        {
+            zanWarn("this worker is delete,worker_id=%d", worker->worker_id);
+            continue;
+        }
+
         if (swKill(worker->worker_pid, SIGTERM) < 0)
         {
             zanError("kill(%d) failed.", worker->worker_pid);
@@ -353,76 +353,76 @@ void zanTaskWorker_signal_handler(int signo)
 {
     switch (signo)
     {
-		case SIGTERM:
-			zanWarn("signal SIGTERM coming");
-			if (ServerG.main_reactor)
-			{
-				ServerG.main_reactor->running = 0;
-			}
-			else
-			{
-				ServerG.running = 0;
-			}
-			break;
-		case SIGALRM:
-			zanWarn("signal SIGALRM coming");
-			swSystemTimer_signal_handler(SIGALRM);
-			break;
-		/**
-		 * for test
-	*/
-		case SIGVTALRM:
-			zanWarn("signal SIGVTALRM coming");
-			break;
-		case SIGUSR1:
-			zanWarn("signal SIGUSR1 coming");
-			if (ServerG.main_reactor)
-			{
-				//获取当前进程运行进程的信息
-				uint32_t worker_id = ServerWG.worker_id;	
-				zanWorker worker = ServerGS->task_workers.workers[worker_id];
-				zanWarn("the worker %d get the signo", worker.worker_pid);
-				ServerWG.reload = 1;
-				ServerWG.reload_count = 0;
+        case SIGTERM:
+            zanWarn("signal SIGTERM coming");
+            if (ServerG.main_reactor)
+            {
+                ServerG.main_reactor->running = 0;
+            }
+            else
+            {
+                ServerG.running = 0;
+            }
+            break;
+        case SIGALRM:
+            zanWarn("signal SIGALRM coming");
+            swSystemTimer_signal_handler(SIGALRM);
+            break;
+        /**
+         * for test
+    */
+        case SIGVTALRM:
+            zanWarn("signal SIGVTALRM coming");
+            break;
+        case SIGUSR1:
+            zanWarn("signal SIGUSR1 coming");
+            if (ServerG.main_reactor)
+            {
+                //获取当前进程运行进程的信息
+                uint32_t worker_id = ServerWG.worker_id;
+                zanWorker worker = ServerGS->task_workers.workers[worker_id];
+                zanWarn("the worker %d get the signo", worker.worker_pid);
+                ServerWG.reload = 1;
+                ServerWG.reload_count = 0;
 
-				//删掉read管道
-				swConnection *socket = swReactor_get(ServerG.main_reactor, worker.pipe_worker);
-				if (socket->events & SW_EVENT_WRITE)
-				{
-					socket->events &= (~SW_EVENT_READ);
-					if (ServerG.main_reactor->set(ServerG.main_reactor, worker.pipe_worker, socket->fdtype | socket->events) < 0)
-					{
-						zanSysError("reactor->set(%d, SW_EVENT_READ) failed.", worker.pipe_worker);
-					}
-				}
-				else
-				{
-					if (ServerG.main_reactor->del(ServerG.main_reactor, worker.pipe_worker) < 0)
-					{
-						zanSysError("reactor->del(%d) failed.", worker.pipe_worker);
-					}
-				}
-			}
-			else
-			{
-				ServerG.running = 0;
-			}
-			break;
-		case SIGUSR2:
-			zanWarn("signal SIGUSR2 coming.");
-			break;
-		default:
+                //删掉read管道
+                swConnection *socket = swReactor_get(ServerG.main_reactor, worker.pipe_worker);
+                if (socket->events & SW_EVENT_WRITE)
+                {
+                    socket->events &= (~SW_EVENT_READ);
+                    if (ServerG.main_reactor->set(ServerG.main_reactor, worker.pipe_worker, socket->fdtype | socket->events) < 0)
+                    {
+                        zanSysError("reactor->set(%d, SW_EVENT_READ) failed.", worker.pipe_worker);
+                    }
+                }
+                else
+                {
+                    if (ServerG.main_reactor->del(ServerG.main_reactor, worker.pipe_worker) < 0)
+                    {
+                        zanSysError("reactor->del(%d) failed.", worker.pipe_worker);
+                    }
+                }
+            }
+            else
+            {
+                ServerG.running = 0;
+            }
+            break;
+        case SIGUSR2:
+            zanWarn("signal SIGUSR2 coming.");
+            break;
+        default:
 #ifdef SIGRTMIN
-			if (signo == SIGRTMIN)
-			{
-				swServer_reopen_log_file(ServerG.serv);
-			}
-			else
+            if (signo == SIGRTMIN)
+            {
+                swServer_reopen_log_file(ServerG.serv);
+            }
+            else
 #endif
-			{
-				zanWarn("recv other signal: %d.", signo);
-			}
-			break;
+            {
+                zanWarn("recv other signal: %d.", signo);
+            }
+            break;
     }
 }
 
@@ -579,7 +579,7 @@ int zanPool_dispatch_to_taskworker(zanProcessPool *pool, swEventData *data, int 
     }
     else
     {
-        sw_stats_incr(&worker->tasking_num);
+        zan_stats_incr(&worker->tasking_num);
     }
 
     return ret;

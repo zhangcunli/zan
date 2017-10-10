@@ -82,76 +82,76 @@ void zanWorker_signal_handler(int signo)
 {
     switch (signo)
     {
-		case SIGTERM:
-			zanWarn("signal SIGTERM coming");
-			if (ServerG.main_reactor)
-			{
-				ServerG.main_reactor->running = 0;
-			}
-			else
-			{
-				ServerG.running = 0;
-			}
-			break;
-		case SIGALRM:
-			zanWarn("signal SIGALRM coming");
-			swSystemTimer_signal_handler(SIGALRM);
-			break;
-		/**
-		 * for test
+        case SIGTERM:
+            zanWarn("signal SIGTERM coming");
+            if (ServerG.main_reactor)
+            {
+                ServerG.main_reactor->running = 0;
+            }
+            else
+            {
+                ServerG.running = 0;
+            }
+            break;
+        case SIGALRM:
+            zanWarn("signal SIGALRM coming");
+            swSystemTimer_signal_handler(SIGALRM);
+            break;
+        /**
+         * for test
      */
-		case SIGVTALRM:
-			zanWarn("signal SIGVTALRM coming");
-			break;
-		case SIGUSR1:
-			zanWarn("signal SIGUSR1 coming");
-			if (ServerG.main_reactor)
-			{
-				//获取当前进程运行进程的信息
-				uint32_t worker_id = ServerWG.worker_id;	
-				zanWorker worker = ServerGS->event_workers.workers[worker_id];
-				zanWarn("the worker %d get the signo", worker.worker_pid);
-				ServerWG.reload = 1;
-				ServerWG.reload_count = 0;
+        case SIGVTALRM:
+            zanWarn("signal SIGVTALRM coming");
+            break;
+        case SIGUSR1:
+            zanWarn("signal SIGUSR1 coming");
+            if (ServerG.main_reactor)
+            {
+                //获取当前进程运行进程的信息
+                uint32_t worker_id = ServerWG.worker_id;
+                zanWorker worker = ServerGS->event_workers.workers[worker_id];
+                zanWarn("the worker %d get the signo", worker.worker_pid);
+                ServerWG.reload = 1;
+                ServerWG.reload_count = 0;
 
-				//删掉read管道
-				swConnection *socket = swReactor_get(ServerG.main_reactor, worker.pipe_worker);
-				if (socket->events & SW_EVENT_WRITE)
-				{
-					socket->events &= (~SW_EVENT_READ);
-					if (ServerG.main_reactor->set(ServerG.main_reactor, worker.pipe_worker, socket->fdtype | socket->events) < 0)
-					{
-						zanSysError("reactor->set(%d, SW_EVENT_READ) failed.", worker.pipe_worker);
-					}
-				}
-				else
-				{
-					if (ServerG.main_reactor->del(ServerG.main_reactor, worker.pipe_worker) < 0)
-					{
-						zanSysError("reactor->del(%d) failed.", worker.pipe_worker);
-					}
-				}
-			}
-			else
-			{
-				ServerG.running = 0;
-			}
-			break;
-		case SIGUSR2:
-			zanWarn("signal SIGUSR2 coming.");
-			break;
-		default:
+                //删掉read管道
+                swConnection *socket = swReactor_get(ServerG.main_reactor, worker.pipe_worker);
+                if (socket->events & SW_EVENT_WRITE)
+                {
+                    socket->events &= (~SW_EVENT_READ);
+                    if (ServerG.main_reactor->set(ServerG.main_reactor, worker.pipe_worker, socket->fdtype | socket->events) < 0)
+                    {
+                        zanSysError("reactor->set(%d, SW_EVENT_READ) failed.", worker.pipe_worker);
+                    }
+                }
+                else
+                {
+                    if (ServerG.main_reactor->del(ServerG.main_reactor, worker.pipe_worker) < 0)
+                    {
+                        zanSysError("reactor->del(%d) failed.", worker.pipe_worker);
+                    }
+                }
+            }
+            else
+            {
+                ServerG.running = 0;
+            }
+            break;
+        case SIGUSR2:
+            zanWarn("signal SIGUSR2 coming.");
+            break;
+        default:
 #ifdef SIGRTMIN
-			if (signo == SIGRTMIN)
-			{
-				swServer_reopen_log_file(ServerG.serv);
-			}
-			else
+            if (signo == SIGRTMIN)
+            {
+                swServer_reopen_log_file(ServerG.serv);
+            }
+            else
 #endif
-			{
-				zanWarn("recv other signal: %d.", signo);
-			}
-			break;
+            {
+                zanWarn("recv other signal: %d.", signo);
+            }
+            break;
     }
 }
 
@@ -331,7 +331,7 @@ static void zanWorker_onStart(zanProcessPool *pool, zanWorker *worker)
                             serv->listen_list->protocol.package_max_length:
                             SW_BUFFER_SIZE_BIG;
 
-    int buffer_num = serv->dgram_port_num;
+    int buffer_num = ServerG.servSet.net_worker_num + serv->dgram_port_num;
 
     ServerWG.buffer_input = sw_malloc(sizeof(swString*) * buffer_num);
     if (!ServerWG.buffer_input)
@@ -343,6 +343,7 @@ static void zanWorker_onStart(zanProcessPool *pool, zanWorker *worker)
     int index = 0;
     for (index = 0; index < buffer_num; index++)
     {
+        zanWarn("==========index=%d", index);
         ServerWG.buffer_input[index] = swString_new(buffer_input_size);
         if (!ServerWG.buffer_input[index])
         {
@@ -426,6 +427,8 @@ static int zanWorker_onTask(zanFactory *factory, swEventData *task)
     zanWorker *worker = zanServer_get_worker(serv, ServerWG.worker_id);
     zan_stats_set_worker_status(worker, ZAN_WORKER_BUSY);
 
+    int networker_index = zanServer_get_networker_index(task->info.networker_id);
+
     zanDebug("worker_onTask: fd=%d, from_id=%d, info.type=%d", task->info.fd, task->info.from_id, task->info.type);
     switch (task->info.type)
     {
@@ -460,7 +463,8 @@ static int zanWorker_onTask(zanFactory *factory, swEventData *task)
             {
                 break;
             }
-            package = zanWorker_get_buffer(task->info.from_id);
+            zanWarn("-----------data=%s, len=%d, from_id=%d", task->data, task->info.len, task->info.networker_id);
+            package = zanWorker_get_buffer(networker_index);
             //merge data to package buffer
             memcpy(package->str + package->length, task->data, task->info.len);
             package->length += task->info.len;
@@ -775,12 +779,12 @@ void zan_worker_shutdown(zanProcessPool *pool)
     for (index = 0; index < ServerG.servSet.worker_num; ++index)
     {
         worker = &pool->workers[index];
-		if(worker->worker_pid == -1)
-		{
-			zanWarn("this net worker is delete,worker_id=%d", worker->worker_id);
-			continue;
-		}
-		
+        if(worker->worker_pid == -1)
+        {
+            zanWarn("this net worker is delete,worker_id=%d", worker->worker_id);
+            continue;
+        }
+
         if (swKill(worker->worker_pid, SIGTERM) < 0)
         {
             zanError("kill(%d) failed.", worker->worker_pid);
