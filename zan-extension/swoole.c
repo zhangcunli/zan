@@ -24,7 +24,6 @@
 #include <ifaddrs.h>
 
 #include "php_swoole.h"
-#include "swWork.h"
 #include "swError.h"
 #include "swBaseOperator.h"
 #include "zanLog.h"
@@ -518,13 +517,13 @@ PHP_MINIT_FUNCTION(zan)
     swoole_connpool_init(module_number TSRMLS_CC);
 
 ///TOD:::
-///#ifdef SW_USE_REDIS
-///    swoole_redis_init(module_number TSRMLS_CC);
-///#endif
+#ifdef SW_USE_REDIS
+    swoole_redis_init(module_number TSRMLS_CC);
+#endif
     swoole_http_client_init(module_number TSRMLS_CC);
     swoole_http_server_init(module_number TSRMLS_CC);
-////    swoole_websocket_init(module_number TSRMLS_CC);
-////    swoole_mysql_init(module_number TSRMLS_CC);
+    swoole_websocket_init(module_number TSRMLS_CC);
+    swoole_mysql_init(module_number TSRMLS_CC);
 
     if (SWOOLE_G(aio_thread_num) > 0)
     {

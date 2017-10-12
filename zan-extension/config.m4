@@ -169,7 +169,7 @@ if test "$PHP_ZAN" != "no"; then
         AC_DEFINE(SW_USE_MYSQLND, 1, [use mysqlnd])
     fi
     AC_CHECK_LIB(c, accept4, AC_DEFINE(HAVE_ACCEPT4, 1, [have accept4]))
-    AC_CHECK_LIB(c, signalfd, AC_DEFINE(HAVE_SIGNALFD, 1, [have signalfd]))
+dnl    AC_CHECK_LIB(c, signalfd, AC_DEFINE(HAVE_SIGNALFD, 1, [have signalfd]))
     AC_CHECK_LIB(c, timerfd_create, AC_DEFINE(HAVE_TIMERFD, 1, [have timerfd]))
     AC_CHECK_LIB(c, eventfd, AC_DEFINE(HAVE_EVENTFD, 1, [have eventfd]))
     AC_CHECK_LIB(c, epoll_create, AC_DEFINE(HAVE_EPOLL, 1, [have epoll]))
@@ -278,13 +278,12 @@ if test "$PHP_ZAN" != "no"; then
         swoole_process.c \
         swoole_buffer.c \
         swoole_http_server.c \
-dnl        swoole_http_v2_server.c \
-dnl        swoole_websocket_server.c \
+        swoole_http_v2_server.c \
+        swoole_websocket_server.c \
         swoole_http_client.c \
         swoole_redis.c \
         swoole_mysql.c \
         swoole_nova.c \
-        swoole_stats.c \
         src/Base.c \
         src/core/hashmap.c \
         src/core/RingQueue.c \
@@ -293,7 +292,6 @@ dnl        swoole_websocket_server.c \
         src/core/list.c \
         src/core/heap.c \
         src/core/rbtree.c \
-        src/memory/ShareMemory.c \
         src/memory/RingBuffer.c \
         src/memory/FixedPool.c \
         src/memory/Malloc.c \
@@ -316,7 +314,6 @@ dnl        src/memory/Table.c \
         src/lock/zanLockBase.c \
         src/network/Client.c \
         src/network/Connection.c \
-dnl        src/network/Server.c \
         src/network/Socket.c \
         src/network/zanConnection.c \
         src/network/zanSocket.c \
