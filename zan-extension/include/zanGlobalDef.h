@@ -19,12 +19,12 @@
 #ifndef _ZAN_ZANGLOBAL_H_
 #define _ZAN_ZANGLOBAL_H_
 
+#include "swBaseOperator.h"
 #include "swTimer.h"
 #include "swPort.h"
 #include "swConnection.h"
 
 #include "zanMemory/zanShmPool.h"
-#include "zanProcess.h"
 #include "zanWorkers.h"
 
 #ifdef __cplusplus
@@ -180,14 +180,15 @@ typedef struct _zanServerSet
 typedef struct _zanServerG
 {
     swTimer timer;
-    uint8_t running :1;
-    uint8_t use_timerfd :1;
-    uint8_t use_signalfd :1;
-    uint8_t reuse_port :1;
-    uint8_t socket_dontwait :1;
-    uint8_t disable_dns_cache :1;
-    uint8_t dns_lookup_random: 1;
-    uint8_t use_timer_pipe :1;
+    uint16_t running :1;
+    uint16_t use_timerfd :1;
+    uint16_t use_signalfd :1;
+    uint16_t enable_signalfd :1;
+    uint16_t reuse_port :1;
+    uint16_t socket_dontwait :1;
+    uint16_t disable_dns_cache :1;
+    uint16_t dns_lookup_random: 1;
+    uint16_t use_timer_pipe :1;
 
     uint8_t   factory_mode;
     uint8_t   process_type;
@@ -201,6 +202,7 @@ typedef struct _zanServerG
     int signal_alarm;
     int log_fd;
     int null_fd;
+    int signal_fd;
 
     struct utsname uname;
 
