@@ -328,9 +328,9 @@ static int swSystemTimer_timerfd_set(swTimer *timer, long interval)
 
     if (interval < 0)
     {
-        if (timer->fd == 0) 
-		{
-			return ZAN_OK;
+        if (timer->fd == 0)
+        {
+            return ZAN_OK;
         }
     }
     else
@@ -516,30 +516,20 @@ static void timer_onInterval(swTimer *timer, swTimer_node *tnode)
 
 static int swTime_del_node(swTimer* timer,swTimer_node* tnode)
 {
-	void* data = tnode->data;
-	tnode->data = NULL;
-	if (data && tnode->used_type == SW_TIMEWHEEL_TYPE)
-	{
-		swTime_wheel_free(data);
-	}
-	else if (data && timer->dict_cb[tnode->used_type]) {
-		user_dict_cb current_cb = timer->dict_cb[tnode->used_type];
-		current_cb(data);
-	}
+    void* data = tnode->data;
+    tnode->data = NULL;
+    if (data && tnode->used_type == SW_TIMEWHEEL_TYPE)
+    {
+        swTime_wheel_free(data);
+    }
+    else if (data && timer->dict_cb[tnode->used_type]) {
+        user_dict_cb current_cb = timer->dict_cb[tnode->used_type];
+        current_cb(data);
+    }
 
 	--timer->num;
-	if(swHashMap_del_int(timer->timer_map, tnode->id) < 0)
-	{
-		zanDebug("delete tnode fail");
-		return ZAN_ERR;
-	}
-	
-	if(swHeap_remove(timer->heap, tnode->heap_node) < 0)
-	{
-		zanDebug("remove tnode fail");
-		return ZAN_ERR;
-	}
-	
+	swHashMap_del_int(timer->timer_map, tnode->id);
+	swHeap_remove(timer->heap, tnode->heap_node);
 	sw_free(tnode);
 	return ZAN_OK;
 }
@@ -619,27 +609,27 @@ int swTimer_del(swTimer *timer, long id)
     {
         // php -r '$timerId = swoole_timer_after(10, function() use(&$timerId) { var_dump(swoole_timer_exists($timerId));swoole_timer_clear($timerId);});'
         // swoole_php_onTimeout 会导致重复删除 报错
-        zanWarn("timer#%ld is not found.", id);
-        return ZAN_ERR;
+        //zanWarn("timer#%ld is not found.remove = %d", id, tnode->remove);
+        return ZAN_OK;
     }
-	
+
     if (is_wheeltimeout_type(tnode->used_type))
     {
         swTime_wheel_del(timer->_time_wheel,tnode);
     }
 
     tnode->remove = 0;
-	if (timer->_current_id > 0 && tnode->id == timer->_current_id)
+    if (timer->_current_id > 0 && tnode->id == timer->_current_id)
     {
         tnode->remove = 1;
         return ZAN_OK;
     }
 
-	if(swTime_del_node(timer,tnode) < 0)
-	{
-		return ZAN_ERR;
-	}
-	return ZAN_OK;
+    if(swTime_del_node(timer,tnode) < 0)
+    {
+        return ZAN_ERR;
+    }
+    return ZAN_OK;
 }
 
 int swTimer_exist(swTimer *timer,long id)
