@@ -939,6 +939,7 @@ int zanNetworker_send2worker(void *data, int len, uint16_t worker_id)
 }
 
 //close connection
+//TODO:::
 int zanNetworker_close_connection(swReactor *reactor, int fd)
 {
     zanServer *serv = ServerG.serv;
@@ -954,7 +955,7 @@ int zanNetworker_close_connection(swReactor *reactor, int fd)
 
     if (!conn->removed)
     {
-        zanWarn("conn->removed=%d, fd=%d, del reactor", conn->removed, fd);
+        zanDebug("conn->removed=%d, fd=%d, del reactor", conn->removed, fd);
         reactor->del(reactor, fd);
     }
 
@@ -1127,13 +1128,12 @@ static int zanNetworker_dgram_loop(swThreadParam *param)
     swEvent event;
     swListenPort *ls = param->object;
 
-
     //ServerTG.factory_lock_target = 0;
     //ServerTG.factory_target_worker = -1;
     ServerTG.id = param->pti;
     ServerTG.type = SW_THREAD_UDP;
 
-    //swSignal_none();
+    swSignal_none();
 
     //blocking
     int fd = ls->sock;
@@ -1245,6 +1245,7 @@ static int zanNetworker_onPacket(swReactor *reactor, swEvent *event)
         uint32_t send_n = pkt.length + header_size;
         uint32_t offset = 0;
 
+        //zanDebug("-----------networker_id=%d, networker_index=%d", task.data.info.networker_id, networker_index);
         if (factory->dispatch(factory, &task) < 0)
         {
             return ZAN_ERR;
