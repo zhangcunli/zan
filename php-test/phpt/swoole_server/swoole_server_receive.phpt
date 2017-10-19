@@ -1,29 +1,21 @@
+--TEST--
+swoole_server: receive
+--SKIPIF--
+<?php require __DIR__ . "/../inc/skipif.inc"; ?>
+--INI--
+assert.active=1
+assert.warning=1
+assert.bail=0
+assert.quiet_eval=0
+
+
+--FILE--
 <?php
 
 require_once __DIR__ . "/../inc/zan.inc";
 
-//$simple_tcp_server = __DIR__ . "/../../apitest/swoole_server/opcode_server.php";
-//$port = get_one_free_port();
-
-//start_server($simple_tcp_server, TCP_SERVER_HOST, $port);
-
-//suicide(2000);
-//usleep(500 * 1000);
-
-/*
-makeTcpClient(TCP_SERVER_HOST, TCP_SERVER_PORT, function(\swoole_client $cli) {
-    $r = $cli->send(opcode_encode("stop", [2]));
-    assert($r !== false);
-}, function(\swoole_client $cli, $recv) {
-    list($op, $data) = opcode_decode($recv);
-    assert($data === true);
-    swoole_event_exit();
-    echo "SUCCESS";
-});
-*/
-
-$host = TCP_SERVER_HOST;
-$port = TCP_SERVER_PORT;
+$host = TCP_SERVER_HOST1;
+$port = TCP_SERVER_PORT1;
 
 
 $pid = pcntl_fork();
@@ -59,7 +51,7 @@ if ($pid === 0) {
     $serv->set([
         'worker_num' => 1,
         'net_worker_num' => 1,
-        'log_file' => '/dev/null',
+        'log_file' => '/tmp/test_log.log',
     ]);
 
     $serv->on('Connect', function ($serv, $fd){
@@ -73,3 +65,9 @@ if ($pid === 0) {
     });
     $serv->start();
 }
+
+
+?>
+--EXPECT--
+Server: onConnected, client_fd=1
+Server: Receive data: Hello Server!

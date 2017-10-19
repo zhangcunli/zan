@@ -246,6 +246,20 @@ static int zanServer_start_check(zanServer *serv)
         servSet->max_connection = ServerG.max_sockets;
     }
 
+	if(servSet->max_request > SW_MAX_REQUEST)
+	{
+		servSet->max_request = SW_MAX_REQUEST;
+	}
+	
+	if(servSet->buffer_input_size > SW_BUFFER_INPUT_SIZE)
+	{
+		servSet->buffer_input_size = SW_BUFFER_INPUT_SIZE;
+	}
+	
+	if(servSet->buffer_output_size > SW_BUFFER_OUTPUT_SIZE)
+	{
+		servSet->buffer_output_size = SW_BUFFER_OUTPUT_SIZE;
+	}
     //ServerGS
     ServerGS->master_pid     = getpid();
     ServerGS->started        = 1;
