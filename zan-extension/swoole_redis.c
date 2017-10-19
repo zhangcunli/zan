@@ -329,18 +329,21 @@ static PHP_METHOD(swoole_redis, on)
             RETURN_FALSE;
         }
 
-        if (redis->onClose) sw_zval_ptr_dtor(&redis->onClose);
+        if (redis->onClose)
+            sw_zval_ptr_dtor(&redis->onClose);
         redis->onClose = cb;
         sw_copy_to_stack(redis->onClose, redis->_onClose);
     }
     else if (len == strlen("timeout") && strncasecmp("timeout", name, len) == 0)
     {
-        if (redis->onTimeout) sw_zval_free(redis->onTimeout);
+        if (redis->onTimeout)
+            sw_zval_free(redis->onTimeout);
         redis->onTimeout = sw_zval_dup(cb);
     }
     else if (len == strlen("message") && strncasecmp("message", name, len) == 0)
     {
-            if (redis->message_callback) sw_zval_ptr_dtor(&redis->message_callback);
+        if (redis->message_callback)
+            sw_zval_ptr_dtor(&redis->message_callback);
         redis->message_callback = cb;
         sw_copy_to_stack(redis->message_callback, redis->_message_callback);
         redis->subscribe = 1;
@@ -436,15 +439,6 @@ static PHP_METHOD(swoole_redis, connect)
         RETURN_FALSE;
     }
 
-    php_swoole_check_reactor();
-    if (!isset_event_callback)
-    {
-        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_READ, swoole_redis_onRead);
-        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_WRITE, swoole_redis_onWrite);
-        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_ERROR, swoole_redis_onError);
-        isset_event_callback = 1;
-    }
-
     redisAsyncSetConnectCallback(context, swoole_redis_onConnect);
     redisAsyncSetDisconnectCallback(context, swoole_redis_onClose);
     zend_update_property_long(swoole_redis_class_entry_ptr, getThis(), ZEND_STRL("sock"), context->c.fd TSRMLS_CC);
@@ -469,10 +463,19 @@ static PHP_METHOD(swoole_redis, connect)
     conn->fd = context->c.fd;
     conn->object = redis;
 
+    php_swoole_check_reactor();
     if (ServerG.main_reactor->add(ServerG.main_reactor, redis->context->c.fd, PHP_SWOOLE_FD_REDIS | SW_EVENT_WRITE) < 0)
     {
         zanWarn("swoole_event_add failed. Erorr: %s[%d].", redis->context->errstr, redis->context->err);
         RETURN_FALSE;
+    }
+
+    if (!isset_event_callback)
+    {
+        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_READ, swoole_redis_onRead);
+        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_WRITE, swoole_redis_onWrite);
+        ServerG.main_reactor->setHandle(ServerG.main_reactor, PHP_SWOOLE_FD_REDIS | SW_EVENT_ERROR, swoole_redis_onError);
+        isset_event_callback = 1;
     }
 
     redis->object = getThis();
@@ -637,7 +640,7 @@ static PHP_METHOD(swoole_redis, __call)
         efree(argvlen);                 \
         efree(argv);                    \
     }                                   \
-} while (0)
+    } while (0)
 
     assert(command_len < SW_REDIS_COMMAND_KEY_SIZE - 1);
     char command_name[SW_REDIS_COMMAND_KEY_SIZE] = {0};
@@ -783,14 +786,14 @@ static void swoole_redis_parse_result(swRedisClient *redis, zval* return_value, 
     case REDIS_REPLY_STATUS:
         if (redis->context->err == 0)
         {
-			if(reply->len > 0)
-			{
-				SW_ZVAL_STRINGL(return_value, reply->str, reply->len, 1);
-			}
-			else
-			{
-				ZVAL_TRUE(return_value);
-			}       
+            if(reply->len > 0)
+            {
+                SW_ZVAL_STRINGL(return_value, reply->str, reply->len, 1);
+            }
+            else
+            {
+                ZVAL_TRUE(return_value);
+            }
             if(reply->len > 0)
             {
                 SW_ZVAL_STRINGL(return_value, reply->str, reply->len, 1);
@@ -971,7 +974,7 @@ static void swoole_redis_onCompleted(redisAsyncContext *c, void *r, void *privda
 
     if (--redis->wait_count == 0)
     {
-            swoole_redis_connect_cb(redis, redis->failure > 0? 0:1 TSRMLS_CC);
+        swoole_redis_connect_cb(redis, redis->failure > 0? 0:1 TSRMLS_CC);
     }
 }
 
@@ -1009,11 +1012,13 @@ static void swoole_redis_connect_cb(swRedisClient *redis, int connected TSRMLS_D
             zanWarn("swoole_async_redis connect_callback handler error.");
         }
 
-        if (retval != NULL)  sw_zval_ptr_dtor(&retval);
+        if (retval != NULL)
+            sw_zval_ptr_dtor(&retval);
 
         sw_zval_ptr_dtor(&result);
 
-        if (zcallback) sw_zval_free(zcallback);
+        if (zcallback)
+            sw_zval_free(zcallback);
 
         sw_zval_ptr_dtor(&object);
     }
@@ -1052,7 +1057,7 @@ static void handle_close(swRedisClient* redis)
     redis->state = SWOOLE_REDIS_STATE_CLOSED;
     if (redis->released)
     {
-            return ;
+        return;
     }
 
     redis->released = 1;
@@ -1074,6 +1079,7 @@ static void handle_close(swRedisClient* redis)
         }
     }
 
+    int fd = redis->fd;
     redis_client_free_cb(redis);
     if (redis->object)
     {
@@ -1081,11 +1087,17 @@ static void handle_close(swRedisClient* redis)
         redis->object = NULL;
         sw_zval_ptr_dtor(&object);
     }
+    ServerG.main_reactor->close(ServerG.main_reactor, fd);
 }
 
 static int swoole_redis_onError(swReactor *reactor, swEvent *event)
 {
-    swRedisClient *redis = event->socket->object;
+    swRedisClient *redis = NULL;
+    if (event->socket)
+    {
+        redis = event->socket->object;
+    }
+
     if (!redis)
     {
         return SW_OK;
@@ -1120,7 +1132,8 @@ static int disconnect_client(swRedisClient* redis)
 
     if (redis && redis->fd > 0)
     {
-        ServerG.main_reactor->del(ServerG.main_reactor,redis->fd);
+        //ServerG.main_reactor->del(ServerG.main_reactor,redis->fd);
+        ServerG.main_reactor->close(ServerG.main_reactor,redis->fd);
         redis->fd = -1;
     }
 
@@ -1169,7 +1182,8 @@ static void swoole_redis_event_Cleanup(void *privdata)
     redis->state = SWOOLE_REDIS_STATE_CLOSED;
     if (redis->context && ServerG.main_reactor)
     {
-        ServerG.main_reactor->del(ServerG.main_reactor, redis->context->c.fd);
+        //ServerG.main_reactor->del(ServerG.main_reactor, redis->context->c.fd);
+        ServerG.main_reactor->close(ServerG.main_reactor, redis->context->c.fd);
     }
 
     redis->fd = -1;

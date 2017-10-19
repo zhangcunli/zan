@@ -358,7 +358,7 @@ static PHP_METHOD(swoole_process, __construct)
         zanPipe *_pipe = emalloc(sizeof(zanWorker));
         int socket_type = pipe_type == 1 ? SOCK_STREAM : SOCK_DGRAM;
         //if (swPipeUnsock_create(_pipe, 1, socket_type) < 0)
-        if (zanPipe_create(_pipe, ZAN_UNSOCK, 1, socket_type) < 0)
+        if (zanPipe_create(_pipe, ZAN_UNSOCK, 0, socket_type) < 0)
         {
             swoole_efree(_pipe);
             swoole_efree(process);
@@ -454,7 +454,7 @@ static PHP_METHOD(swoole_process, useQueue)
         RETURN_FALSE;
     }
 
-    //queue->deleted = 0;
+    queue->deleted = 0;
     process->queue = queue;
     process->ipc_mode = mode;
     RETURN_TRUE;
@@ -465,7 +465,7 @@ static PHP_METHOD(swoole_process, freeQueue)
     zanWorker *process = swoole_get_object(getThis());
     if (process && process->queue)
     {
-        //process->queue->deleted = 1;
+        process->queue->deleted = 1;
         process->queue->close(process->queue);
         swoole_efree(process->queue);
         process->queue = NULL;
@@ -613,7 +613,7 @@ static PHP_METHOD(swoole_process, read)
     buf_size = (buf_size > 65536)? 65535:buf_size;
 
     char *buf = emalloc(buf_size + 1);
-    int ret = read(process->pipe, buf, buf_size);;
+    int ret = read(process->pipe, buf, buf_size);
     if (ret < 0)
     {
         swoole_efree(buf);

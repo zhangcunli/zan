@@ -251,26 +251,25 @@ static void zanNetworker_onStart(zanProcessPool *pool, zanWorker *worker)
 static void zanNetworker_onStop(zanProcessPool *pool, zanWorker *worker)
 {
     zanDebug("networker onStop, worker_id=%d, process_types=%d", worker->worker_id, worker->process_type);
-	zanServer *serv = ServerG.serv;
+    zanServer *serv = ServerG.serv;
     if (serv->onWorkerStop)
     {
-        zanWarn("worker: call user worker onStop, worker_id=%d, process_type=%d", worker->worker_id, worker->process_type);
+        zanDebug("worker: call user worker onStop, worker_id=%d, process_type=%d", worker->worker_id, worker->process_type);
         serv->onWorkerStop(serv, worker->worker_id);
     }
-	
-	if(ServerG.main_reactor != NULL)
-	{
-		ServerG.main_reactor->free(ServerG.main_reactor);
-		sw_free(ServerG.main_reactor);
-	}
-	
-	if(worker != NULL)
-	{
-		zanWorker_free(worker);
-	} 
+
+    if(ServerG.main_reactor != NULL)
+    {
+        ServerG.main_reactor->free(ServerG.main_reactor);
+        sw_free(ServerG.main_reactor);
+    }
+
+    if(worker != NULL)
+    {
+        zanWorker_free(worker);
+    }
     return;
 }
-
 
 static int zanNetworker_loop(zanProcessPool *pool, zanWorker *worker)
 {
@@ -340,7 +339,6 @@ static int zanNetworker_loop(zanProcessPool *pool, zanWorker *worker)
     int ret = reactor->wait(reactor, &tmo);
 
     pool->onWorkerStop(pool, worker);
-    reactor->free(reactor);
 
     zanDebug("networker loop out: wait return ret=%d, worker_id=%d, process_type=%d, pid=%d",
             ret, worker->worker_id, ServerG.process_type, ServerG.process_pid);
@@ -1301,17 +1299,13 @@ zan_pid_t zanNetWorker_spawn(zanWorker *worker)
         //child
         case 0:
         {
-            if (pool->onWorkerStart != NULL)
+            if(zanWorker_init(worker) < 0)
             {
-                pool->onWorkerStart(pool, worker);
+                zanError("init worker failed");
+                return ZAN_ERR;
             }
 
             int ret_code = pool->main_loop(pool, worker);
-
-            if (pool->onWorkerStop != NULL)
-            {
-                pool->onWorkerStop(pool, worker);
-            }
             exit(ret_code);
             break;
         }
@@ -1359,11 +1353,13 @@ static void zanPool_networker_free(zanProcessPool *pool)
         swHashMap_free(pool->map);
     }
 
+#if 0
     for (index = 0; index < ServerG.servSet.net_worker_num; index++)
     {
-        //TODO:::???
-        zanWorker_free(&pool->workers[index]);
+        //zanWorker_free(&pool->workers[index]);
     }
+#endif
+
     zan_shm_free(pool->workers);
 }
 
