@@ -321,7 +321,7 @@ static void zanWorker_onStart(zanProcessPool *pool, zanWorker *worker)
     zanWorker_signal_init();
 
     /// 设置cpu 亲和性
-    ///swoole_cpu_setAffinity(ServerWG.worker_id, serv);
+    swoole_cpu_setAffinity(ServerWG.worker_id, serv);
 
     int buffer_input_size = (serv->listen_list->open_eof_check ||
                              serv->listen_list->open_length_check ||
@@ -368,7 +368,7 @@ static void zanWorker_onStop(zanProcessPool *pool, zanWorker *worker)
     zanServer *serv = ServerG.serv;
     if (serv->onWorkerStop)
     {
-        zanWarn("worker: call user worker onStop, worker_id=%d, process_type=%d", worker->worker_id, worker->process_type);
+        zanDebug("worker: call user worker onStop, worker_id=%d, process_type=%d", worker->worker_id, worker->process_type);
         serv->onWorkerStop(serv, worker->worker_id);
     }
 
@@ -580,7 +580,9 @@ static int zanWorker_onTask(zanFactory *factory, swEventData *task)
 int zanWorker_send2worker(zanWorker *dst_worker, void *buf, int lenght, int flag)
 {
     int pipefd = (flag & ZAN_PIPE_MASTER) ? dst_worker->pipe_master : dst_worker->pipe_worker;
-    if (ZAN_PROCESS_TASKWORKER == dst_worker->process_type && ZAN_IPC_MSGQUEUE == ServerG.servSet.task_ipc_mode)
+
+    int task_ipc_mode = ServerG.servSet.task_ipc_mode;
+    if (ZAN_PROCESS_TASKWORKER == dst_worker->process_type && task_ipc_mode >= ZAN_IPC_MSGQUEUE)
     {
         struct
         {
@@ -588,9 +590,13 @@ int zanWorker_send2worker(zanWorker *dst_worker, void *buf, int lenght, int flag
             swEventData buf;
         } msg;
 
-        msg.mtype = dst_worker->worker_id + 1;
-        memcpy(&msg.buf, buf, lenght);
+        if (2 == task_ipc_mode) {
+            msg.mtype = dst_worker->worker_id + 1;
+        } else {
+            msg.mtype = 1;
+        }
 
+        memcpy(&msg.buf, buf, lenght);
         zanMsgQueue *queue = dst_worker->pool->queue;
         return queue->push(queue, (zanQueue_Data *) &msg, lenght);
     }

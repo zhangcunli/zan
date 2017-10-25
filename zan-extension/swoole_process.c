@@ -449,7 +449,7 @@ static PHP_METHOD(swoole_process, useQueue)
     }
 
     zanMsgQueue *queue = emalloc(sizeof(zanMsgQueue));
-    if (zanMsgQueue_create(queue, 1, msgkey, 0) < 0)
+    if (zanMsgQueue_create(queue, 1, msgkey) < 0)
     {
         RETURN_FALSE;
     }
@@ -589,6 +589,7 @@ static PHP_METHOD(swoole_process, start)
     else
     {
         process->child_process = 1;
+        process->worker_pid = getpid();
         SW_CHECK_RETURN(php_swoole_process_start(process, getThis() TSRMLS_CC));
     }
 
@@ -702,13 +703,20 @@ static PHP_METHOD(swoole_process, push)
         RETURN_FALSE;
     }
 
-    message.type = process->worker_pid;
+    if (process->ipc_mode == 2)
+    {
+        message.type = 1;
+    }
+    else
+    {
+        message.type = (process->worker_pid == 0 ) ? 1 : process->worker_pid;
+    }
+
     memcpy(message.data, data, length);
 
-    //if (swMsgQueue_push(process->queue, (swQueue_data *)&message, length) < 0)
     if (process->queue->push(process->queue, (zanQueue_Data *)&message, length) < 0)
     {
-        zanWarn("msgsnd() failed. Error: %s[%d]", strerror(errno), errno);
+        zanWarn("msgsnd() failed. type=%ld, message=%s, Error: %s[%d]", message.type, message.data, strerror(errno), errno);
         RETURN_FALSE;
     }
 
@@ -738,8 +746,14 @@ static PHP_METHOD(swoole_process, pop)
         char data[SW_MSGMAX];
     } message;
 
-    message.type = (process->ipc_mode == 2)? 0:process->worker_id;
-    //int n = swMsgQueue_pop(process->queue, (swQueue_data *) &message, maxsize);
+    if(process->ipc_mode == 2)
+    {
+        message.type = 1;
+    }
+    else
+    {
+        message.type = (process->worker_pid == 0)? 1 : process->worker_pid;
+    }
     int n = process->queue->pop(process->queue, (zanQueue_Data *) &message, maxsize);
     if (n < 0)
     {

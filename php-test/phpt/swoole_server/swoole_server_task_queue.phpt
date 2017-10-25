@@ -1,8 +1,7 @@
 --TEST--
-swoole_client sync: connect 1 - 1
-
+swoole_server: task
 --SKIPIF--
-<?php require  __DIR__ . "/../inc/skipif.inc"; ?>
+<?php require __DIR__ . "/../inc/skipif.inc"; ?>
 --INI--
 assert.active=1
 assert.warning=1
@@ -26,23 +25,33 @@ if ($pid < 0) {
 if ($pid === 0) {
     usleep(1000);
 
-    $client = new swoole_client(SWOOLE_TCP, SWOOLE_SOCK_SYNC);
-    $client->connect("127.0.0.1", 9501);
-
+    $client = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
     
-	$data = "TcpSendto";
-	$client->send($data);
-
-	$message = $client->recv();
-
+    //设置事件回调函数
+    $client->on("connect", function($cli) {
+        $cli->send("Hello Server!\n");
+        $cli->close();
+    });
+    $client->on("receive", function($cli, $data){
+        //echo "Client Received: ".$data."\n";
+    });
+    $client->on("error", function($cli){
+        echo "Clinet Error.\n";
+    });
+    $client->on("close", function($cli){
+        //echo "Client Close.\n";
+    });
+    //发起网络连接
+    $client->connect($host, $port, 0.5);
 
 } else {
 
-    $serv = new swoole_server("127.0.0.1", 9501);
+    $serv = new swoole_server($host, $port);
     $serv->set([
         'worker_num' => 1,
         'net_worker_num' => 1,
-        'task_worker_num' => 1,
+        'task_worker_num' => 2,
+        'task_ipc_mode' => 2,
         'log_file' => '/tmp/test_log.log',
     ]);
 
@@ -69,6 +78,6 @@ if ($pid === 0) {
 }
 
 ?>
-
 --EXPECT--
-Server: Receive data: TcpSendtoServer: Task data: TcpSendto
+Server: Receive data: Hello Server!
+Server: Task data: Hello Server!
