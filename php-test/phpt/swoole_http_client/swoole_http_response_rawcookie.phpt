@@ -33,7 +33,7 @@ testRawCookie(HTTP_SERVER_HOST, $port, $rawcontent, function(\swoole_http_client
 */
 
 if ($pid === 0) {
-    sleep(1);
+    usleep(500000);
 
     $httpClient = makeHttpClient($host, $port);
 

@@ -26,7 +26,7 @@ if ($pid < 0) {
 }
 
 if ($pid === 0) {
-    sleep(1);
+    usleep(500000);
 
     $httpClient = makeHttpClient($host, $port);
 
