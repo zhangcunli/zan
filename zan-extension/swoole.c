@@ -672,7 +672,6 @@ PHP_RSHUTDOWN_FUNCTION(zan)
         }
     }
 
-
     /// clean client information
     swoole_thread_clean();
     //SwooleWG.reactor_wait_onexit = 0;
