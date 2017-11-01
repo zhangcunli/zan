@@ -506,7 +506,7 @@ static PHP_METHOD(swoole_mysql, connect)
     connector->port = SW_MYSQL_DEFAULT_PORT;
     if (php_swoole_array_get_value(_ht, "port", value))
     {
-        convert_to_long(value);
+        zan_convert_to_long(value);
         connector->port = Z_LVAL_P(value);
     }
 
@@ -689,7 +689,7 @@ static PHP_METHOD(swoole_mysql, connect)
     zval* connectTimeout = sw_zend_read_property(swoole_mysql_class_entry_ptr, getThis(), ZEND_STRL("connectTimeout"), 1 TSRMLS_CC);
     if (connectTimeout)
     {
-        convert_to_long(connectTimeout);
+        zan_convert_to_long(connectTimeout);
         timeout = Z_LVAL_P(connectTimeout);
     }
 
@@ -1642,7 +1642,7 @@ static int query_handler(mysql_client *client,zval* zobject,swString* sql)
         zval* queryTimeout = sw_zend_read_property(swoole_mysql_class_entry_ptr,zobject, ZEND_STRL("queryTimeout"), 1 TSRMLS_CC);
         if (queryTimeout)
         {
-            convert_to_long(queryTimeout);
+            zan_convert_to_long(queryTimeout);
             timeout = Z_LVAL_P(queryTimeout);
         }
 
